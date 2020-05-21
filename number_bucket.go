@@ -31,24 +31,8 @@
 
 package goalg
 
-import (
-	"math/rand"
-)
-
-func randIntArr(size, max int) []int {
-	arr := make([]int, size)
-	for i := 0; i < size; i++ {
-		arr[i] = rand.Intn(max)
-	}
-	return arr
-}
-
-var (
-	NumberBucketIntArr10  = randIntArr(10, 10)
-	NumberBucketIntArr50  = randIntArr(50, 10)
-	NumberBucketIntArr100 = randIntArr(100, 10)
-)
-
+// NumberBucketCapacityByCutOneByOne calc capacity of number bucket by cut floor one by one
+//
 // 分析: 对于数组 3 1 2 5 2 4，形如下图，星号为可以盛水的地方，一眼看上去特别像俄罗斯方块，于是想到一行一行消除的方式。
 // 1. 首先找到最小和最大的数；最小数及其之下的数都是方块，没有空间；最小和最大数之间是有空间的；
 // 2. 每一行，左侧第一个方块和右侧第一个方块之间，统计空方块的数量；
@@ -116,6 +100,8 @@ func NumberBucketCapacityByCutOneByOne(arr []int) int {
 	return capacity
 }
 
+// NumberBucketCapacityByShortBoard calc capacity of number bucket by finding the short board in only one loop
+//
 // 分析: 仔细分析，根据短板理论, 能盛多少水由最短的一块决定。只要找到短板，和短板比较就知道一个位置的盛水容量。
 // 这个桶可以看成是许多小桶拼在一起的大桶，算出每一个小桶的容量加总即可。
 // 每个小桶，只有左右两块板
