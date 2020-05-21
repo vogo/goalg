@@ -46,19 +46,19 @@ func randIntArr(size, max int) []int {
 var (
 	NumberBucketIntArr10  = randIntArr(10, 10)
 	NumberBucketIntArr50  = randIntArr(50, 10)
-	NumberBucketIntArr100 = randIntArr(50, 10)
+	NumberBucketIntArr100 = randIntArr(100, 10)
 )
 
-// 分析: 对于数组 3 1 2 5 2 4，形如下图，星号为可以盛水的地方，一眼看上去特别想俄罗斯方块，于是想到一行一行消除的方式。
-// 1. 首先找到最小和最大的数；最小数及其之下的数都是方块，没有空间；最小和最大数直接是有空间的；
-// 2. 每一行，左侧第一个方块和右侧第一个方块直接，统计空方块的数量；
+// 分析: 对于数组 3 1 2 5 2 4，形如下图，星号为可以盛水的地方，一眼看上去特别像俄罗斯方块，于是想到一行一行消除的方式。
+// 1. 首先找到最小和最大的数；最小数及其之下的数都是方块，没有空间；最小和最大数之间是有空间的；
+// 2. 每一行，左侧第一个方块和右侧第一个方块之间，统计空方块的数量；
 // 3. 左侧第一个方块和右侧第一个方块的位置是向中间聚合的；
 //       |
 //       | * |
 // | * * | * |
 // | * | | | |
 // | | | | | |
-func CountCapacityByCutOneByOne(arr []int) int {
+func NumberBucketCapacityByCutOneByOne(arr []int) int {
 	min := arr[0]
 	max := min
 
@@ -120,7 +120,7 @@ func CountCapacityByCutOneByOne(arr []int) int {
 // 这个桶可以看成是许多小桶拼在一起的大桶，算出每一个小桶的容量加总即可。
 // 每个小桶，只有左右两块板
 // 找出小桶的短板，短板是小桶左侧或右侧最高的板
-func CountCapacityByShortBoard(arr []int) int {
+func NumberBucketCapacityByShortBoard(arr []int) int {
 	// 取第一个为左侧板
 	leftMax := arr[0]
 
