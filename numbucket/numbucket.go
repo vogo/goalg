@@ -29,9 +29,59 @@
 // 输出
 // 2
 
-package goalg
+package numbucket
 
-// NumberBucketCapacityByCutOneByOne calc capacity of number bucket by cut floor one by one
+// CapacityByShortBoard calc capacity of number bucket by finding the short board in only one loop
+//
+// 分析: 仔细分析，根据短板理论, 能盛多少水由最短的一块决定。只要找到短板，和短板比较就知道一个位置的盛水容量。
+// 这个桶可以看成是许多小桶拼在一起的大桶，算出每一个小桶的容量加总即可。
+// 每个小桶，只有左右两块板
+// 找出小桶的短板，短板是小桶左侧或右侧最高的板
+func CapacityByShortBoard(arr []int) int {
+	// 取第一个为左侧板
+	leftMax := arr[0]
+
+	// 取最后一个为右侧板
+	rightMax := arr[len(arr)-1]
+
+	capacity := 0
+
+	left := 1
+	right := len(arr) - 2
+
+	// 左右指针向中间聚合
+	for left <= right {
+		// 左侧为短板
+		if leftMax < rightMax {
+			if arr[left] > leftMax {
+				// 用更高的板替换左侧短板
+				leftMax = arr[left]
+			} else {
+				// 计算小桶容量
+				capacity += leftMax - arr[left]
+			}
+
+			// 向中间聚合，计算下一个小桶
+			left++
+		} else {
+			// 右侧为短板
+			if arr[right] > rightMax {
+				// 用更高的板替换右侧短板
+				rightMax = arr[right]
+			} else {
+				// 计算小桶容量
+				capacity += rightMax - arr[right]
+			}
+
+			// 向中间聚合，计算下一个小桶
+			right--
+		}
+	}
+
+	return capacity
+}
+
+// CapacityByCutOneByOne calc capacity of number bucket by cut floor one by one
 //
 // 分析: 对于数组 3 1 2 5 2 4，形如下图，星号为可以盛水的地方，一眼看上去特别像俄罗斯方块，于是想到一行一行消除的方式。
 // 1. 首先找到最小和最大的数；最小数及其之下的数都是方块，没有空间；最小和最大数之间是有空间的；
@@ -42,7 +92,9 @@ package goalg
 // | * * | * |
 // | * | | | |
 // | | | | | |
-func NumberBucketCapacityByCutOneByOne(arr []int) int {
+//
+// Note: 此方法性能比 CapacityByShortBoard 要差，性能跟桶深度有关系，保留此算法只是为了进行对比。
+func CapacityByCutOneByOne(arr []int) int {
 	min := arr[0]
 	max := min
 
@@ -94,56 +146,6 @@ func NumberBucketCapacityByCutOneByOne(arr []int) int {
 			if arr[i] < x {
 				capacity++
 			}
-		}
-	}
-
-	return capacity
-}
-
-// NumberBucketCapacityByShortBoard calc capacity of number bucket by finding the short board in only one loop
-//
-// 分析: 仔细分析，根据短板理论, 能盛多少水由最短的一块决定。只要找到短板，和短板比较就知道一个位置的盛水容量。
-// 这个桶可以看成是许多小桶拼在一起的大桶，算出每一个小桶的容量加总即可。
-// 每个小桶，只有左右两块板
-// 找出小桶的短板，短板是小桶左侧或右侧最高的板
-func NumberBucketCapacityByShortBoard(arr []int) int {
-	// 取第一个为左侧板
-	leftMax := arr[0]
-
-	// 取最后一个为右侧板
-	rightMax := arr[len(arr)-1]
-
-	capacity := 0
-
-	left := 1
-	right := len(arr) - 2
-
-	// 左右指针向中间聚合
-	for left <= right {
-		// 左侧为短板
-		if leftMax < rightMax {
-			if arr[left] > leftMax {
-				// 用更高的板替换左侧短板
-				leftMax = arr[left]
-			} else {
-				// 计算小桶容量
-				capacity += leftMax - arr[left]
-			}
-
-			// 向中间聚合，计算下一个小桶
-			left++
-		} else {
-			// 右侧为短板
-			if arr[right] > rightMax {
-				// 用更高的板替换右侧短板
-				rightMax = arr[right]
-			} else {
-				// 计算小桶容量
-				capacity += rightMax - arr[right]
-			}
-
-			// 向中间聚合，计算下一个小桶
-			right--
 		}
 	}
 
