@@ -103,33 +103,58 @@ func Add(root *Node, key int, value interface{}) *Node {
 
 // addNew add new node, return the new root node.
 func addNew(root *Node, new *Node) *Node {
+	// set the new node to red
 	new.Color = Red
-	root = addNodeRecursively(root, Left, new)
+
+	root = addNode(root, Left, new)
+
+	// reset root color
 	root.Color = Black
+
 	return root
 }
 
-// addNodeRecursively recursively down to leaf, and add the new node to the leaf,
+// addNode recursively down to leaf, and add the new node to the leaf,
 // then rebuild the tree from the leaf to root.
-func addNodeRecursively(node *Node, pos Position, new *Node) *Node {
+// code comment use the following terms:
+// - N as the balance node
+// - L as the left child of N
+// - R as the right child of N
+// - P as the parent of N
+// - LL as the left child of left child of N
+// - RR as the right child of right child of N
+func addNode(node *Node, pos Position, new *Node) *Node {
+	// case 1: first node
 	if node == nil {
 		return new
 	}
 
 	if new.Key < node.Key {
-		node.Left = addNodeRecursively(node.Left, Left, new)
+		node.Left = addNode(node.Left, Left, new)
+
+		// case 2: L is black means it's already balance.
 		if node.Left.Color == Black {
 			return node
 		}
 
 		if node.Color == Red {
+			// case 3: L is red, N is red, N is right child of P
+			// execute: right rotate up the L
+			// result: the black count through L,N will not change, but let it match the case 4
 			if pos == Right {
 				node = RightRotate(node)
 			}
+
+			// case 4: L is red, N is red, N is left child of P
+			// execute: nothing
+			// result: it's the case 5 of PP
 			return node
 		}
 
 		if node.Left.Left != nil && node.Left.Left.Color == Red {
+			// case 5: N is black, L is red, LL is red
+			// execute: right rotate N, and make LL to black
+			// result: black count through N is not change, while that through LL increase 1, tree is now balance.
 			node = RightRotate(node)
 			node.Left.Color = Black
 		}
@@ -138,19 +163,30 @@ func addNodeRecursively(node *Node, pos Position, new *Node) *Node {
 	}
 
 	if new.Key > node.Key {
-		node.Right = addNodeRecursively(node.Right, Right, new)
+		node.Right = addNode(node.Right, Right, new)
 
+		// case 2: R is black means it's already balance
 		if node.Right.Color == Black {
 			return node
 		}
 
 		if node.Color == Red {
 			if pos == Left {
+				// case 3: R is red, N is red, N is left child of P
+				// execute: left rotate up the R
+				// result: the black count through R,N will not change, but let it match the case 4
 				node = LeftRotate(node)
 			}
+
+			// case 4: R is red, N is red, N is right child of P
+			// execute: nothing
+			// result: it's the case 5 of PP
 			return node
 		}
 
+		// case 5: N is black, R is red, RR is red
+		// execute: left rotate N, and make RR to black
+		// result: black count through N is not change, while that through RR increase 1, tree is now balance.
 		if node.Right.Right != nil && node.Right.Right.Color == Red {
 			node = LeftRotate(node)
 			node.Right.Color = Black
@@ -159,11 +195,10 @@ func addNodeRecursively(node *Node, pos Position, new *Node) *Node {
 		return node
 	}
 
-	new.Left = node.Left
-	new.Right = node.Right
-	new.Color = node.Color
+	// case 6: find the exists node, just replace the old value with the new
+	node.Value = new.Value
 
-	return new
+	return node
 }
 
 // Find find the value of a key.
@@ -381,7 +416,10 @@ func deleteBalance(stack *nodePath) {
 
 			pp.bindChild(p.rotateUpSiblingChild().Node)
 
-			// reset S(a black node)
+			// reset PP (original S)
+			pp = p.previous
+
+			// reset S (a black node, original SL/SR)
 			s = p.siblingChild()
 		}
 

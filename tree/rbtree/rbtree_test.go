@@ -17,27 +17,31 @@ import (
 	"github.com/wongoo/goalg/tree/rbtree"
 )
 
-func TestReplace(t *testing.T) {
-	a := 1
-	b := 2
-
-	a, b = b, a
-
-	assert.Equal(t, 2, a)
-	assert.Equal(t, 1, b)
-}
-
-func TestNewNumRbTree(t *testing.T) {
-	root := RandNumRbTree(17)
+func TestRbTreeGraph(t *testing.T) {
+	root := RandNumRbTree(t, 16)
+	t.Log("root:", root.Key)
 	generateTreeSvg(t, root)
 }
 
-func TestRbTreeFindDelete(t *testing.T) {
-	root := RandNumRbTree(8)
+func TestRbTreeAdd(t *testing.T) {
+	root := RandNumRbTree(t, 7)
 
+	root = rbtree.Add(root, 7, "7")
+	assert.Equal(t, "7", rbtree.Find(root, 7))
+
+	root = rbtree.Add(root, 7, "77")
+	assert.Equal(t, "77", rbtree.Find(root, 7))
+
+	root = rbtree.Add(root, 8, "8")
+	assert.Equal(t, "8", rbtree.Find(root, 8))
+	root = rbtree.Add(root, 8, "88")
+	assert.Equal(t, "88", rbtree.Find(root, 8))
+}
+
+func TestRbTreeFindDelete(t *testing.T) {
+	root := RandNumRbTree(t, 8)
 	val := rbtree.Find(root, 7)
 	assert.Equal(t, "7", val)
-
 	root, ret := rbtree.Delete(root, 7)
 	assert.Equal(t, "7", ret)
 	root, ret = rbtree.Delete(root, 6)
@@ -48,8 +52,10 @@ func TestRbTreeFindDelete(t *testing.T) {
 	assert.Equal(t, "4", ret)
 	root, ret = rbtree.Delete(root, 3)
 	assert.Equal(t, "3", ret)
+
 	root, ret = rbtree.Delete(root, 2)
 	assert.Equal(t, "2", ret)
+
 	root, ret = rbtree.Delete(root, 1)
 	assert.Equal(t, "1", ret)
 	root, ret = rbtree.Delete(root, 0)
@@ -58,7 +64,7 @@ func TestRbTreeFindDelete(t *testing.T) {
 }
 
 func TestRbTreeFindDelete2(t *testing.T) {
-	root := RandNumRbTree(8)
+	root := RandNumRbTree(t, 8)
 
 	val := rbtree.Find(root, 7)
 	assert.Equal(t, "7", val)
@@ -82,18 +88,15 @@ func TestRbTreeFindDelete2(t *testing.T) {
 	assert.Nil(t, root)
 }
 
-func RandNumRbTree(count int) *rbtree.Node {
+func RandNumRbTree(t *testing.T, count int) *rbtree.Node {
 	var root *rbtree.Node
 
-	arr := make([]int, count)
-	for i := 0; i < count; i++ {
-		arr[i] = i
-	}
+	arr := rand.Perm(count)
 
-	for len(arr) > 0 {
-		i := rand.Intn(len(arr))
-		root = rbtree.Add(root, arr[i], strconv.Itoa(arr[i]))
-		arr = append(arr[:i], arr[i+1:]...)
+	t.Log("rbtree rand build seq:", arr)
+
+	for _, n := range arr {
+		root = rbtree.Add(root, n, strconv.Itoa(n))
 	}
 
 	return root
