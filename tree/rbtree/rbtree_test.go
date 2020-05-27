@@ -57,6 +57,31 @@ func TestRbTreeFindDelete(t *testing.T) {
 	assert.Nil(t, root)
 }
 
+func TestRbTreeFindDelete2(t *testing.T) {
+	root := RandNumRbTree(8)
+
+	val := rbtree.Find(root, 7)
+	assert.Equal(t, "7", val)
+
+	root, ret := rbtree.Delete(root, 7)
+	assert.Equal(t, "7", ret)
+	root, ret = rbtree.Delete(root, 0)
+	assert.Equal(t, "0", ret)
+	root, ret = rbtree.Delete(root, 6)
+	assert.Equal(t, "6", ret)
+	root, ret = rbtree.Delete(root, 1)
+	assert.Equal(t, "1", ret)
+	root, ret = rbtree.Delete(root, 5)
+	assert.Equal(t, "5", ret)
+	root, ret = rbtree.Delete(root, 2)
+	assert.Equal(t, "2", ret)
+	root, ret = rbtree.Delete(root, 4)
+	assert.Equal(t, "4", ret)
+	root, ret = rbtree.Delete(root, 3)
+	assert.Equal(t, "3", ret)
+	assert.Nil(t, root)
+}
+
 func RandNumRbTree(count int) *rbtree.Node {
 	var root *rbtree.Node
 

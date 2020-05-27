@@ -1,13 +1,13 @@
 // Copyright 2020 wongoo@apache.org. All rights reserved.
 
-// red-Black tree implement
+// a red-black tree implement
 // the node only contains pointers to left/right child, not for the parent, for saving storage space for large tree.
 package rbtree
 
 // Color node color
 type Color bool
 
-// String node color desc
+// String node color desc.
 func (c Color) String() string {
 	if c {
 		return "red"
@@ -15,10 +15,10 @@ func (c Color) String() string {
 	return "Black"
 }
 
-// Position tree path position, left or right
+// Position tree path position, left or right.
 type Position bool
 
-// String position desc
+// String position desc.
 func (p Position) String() string {
 	if p {
 		return "left"
@@ -340,7 +340,7 @@ func Delete(node *Node, key int) (*Node, interface{}) {
 
 	// N has diff color with next
 	if node.Color != c.Color {
-		// set color of N to Black
+		// set color of N to black
 		node.Color = Black
 
 		return root, ret
@@ -373,22 +373,24 @@ func deleteBalance(stack *nodePath) {
 		p, pp = stack, stack.previous
 		s = p.siblingChild()
 
-		// case 2: siblingChild is red.
-		// execute: rotate the sibling Child as PP, and exchange color of P and PP.
-		// result: the Black number not change, but N has a Black siblingChild now.
+		// case 2: S is red.
+		// execute: rotate S up as the PP of N, and exchange the color of P and S.
+		// result: the black number not change, but N has a black sibling now.
 		if s.Color == Red {
-			spp := p.rotateUpSiblingChild()
-			pp.bindChild(spp.Node)
-			p.Color, spp.Color = spp.Color, p.Color
+			p.Color, s.Color = s.Color, p.Color
+
+			pp.bindChild(p.rotateUpSiblingChild().Node)
+
+			// reset S(a black node)
 			s = p.siblingChild()
 		}
 
-		// now S is Black.
+		// now S is black.
 
 		if s.LeftBlack() && s.RightBlack() {
 			// case 3: color of P, S, SL, SR are all Black.
 			// execute: set S to red.
-			// result: the path through S will reduce one Black, and the left and right of P now balance,
+			// result: the path through S will reduce one black, and the left and right of P now balance,
 			//         set N to p, and continue execute balance.
 			if p.Black() {
 				s.Color = Red
@@ -396,9 +398,9 @@ func deleteBalance(stack *nodePath) {
 				continue
 			}
 
-			// case4: S, SL, SR are Black, P is red.
+			// case4: S, SL, SR are black, P is red.
 			// execute: exchange the color of S and P.
-			// result: add one Black on the path through N, while that is not change for path through S, balance finish.
+			// result: add one black on the path through N, while that is not change for path through S, balance finish.
 			p.Color, s.Color = s.Color, p.Color
 			return
 		}
@@ -406,20 +408,20 @@ func deleteBalance(stack *nodePath) {
 		//  now SL and SR has diff color
 
 		if p.pos == Left {
-			// case 5: N is left child of P, S is Black, SL is red, SR is Black.
+			// case 5: N is left child of P, S is black, SL is red, SR is black.
 			// execute: right rotate on S, then exchange color of SL(parent of S now) and S.
-			// result: N has a new Black sibling S(original SL), and S has a red right child SR(original S),
-			//         while the Black count through S will not change.
+			// result: N has a new black sibling S(original SL), and S has a red right child SR(original S),
+			//         while the black count through S will not change.
 			if s.LeftRed() {
 				s = RightRotate(s)
 				s.Color, s.Right.Color = s.Right.Color, s.Color
 				p.Right = s
 			}
 
-			// case6: N is left child of P, S is Black, SL is Black, SR is red.
-			// execute: set SR to Black, left rotate P, the exchange the color of P and S.
-			// result: S is now the parent of P, the Black count through N increase 1,
-			//         the Black count through S keep the same,
+			// case6: N is left child of P, S is black, SL is black, SR is red.
+			// execute: set SR to black, left rotate P, the exchange the color of P and S.
+			// result: S is now the parent of P, the black count through N increase 1,
+			//         the black count through S keep the same,
 			//         balance finish.
 			s.Right.Color = Black
 			pp.bindChild(LeftRotate(p.Node))
@@ -427,20 +429,20 @@ func deleteBalance(stack *nodePath) {
 			return
 		}
 
-		// case 5: N is right child of P, S is Black, SL is Black, SR is red.
+		// case 5: N is right child of P, S is black, SL is black, SR is red.
 		// execute: left rotate on S, then exchange color of SR(parent of S now) and S.
-		// result: N has a new Black sibling S(original SR), and S has a red left child SL(original S),
-		//         while the Black count through S will not change.
+		// result: N has a new black sibling S(original SR), and S has a red left child SL(original S),
+		//         while the black count through S will not change.
 		if s.RightRed() {
 			s = LeftRotate(s)
 			s.Color, s.Left.Color = s.Left.Color, s.Color
 			p.Left = s
 		}
 
-		// case6: N is right child of P, S is Black, SL is red, SR is Black.
-		// execute: set SL to Black, right rotate P, the exchange the color of P and S.
-		// result: S is now the parent of P, the Black count through N increase 1,
-		//         the Black count through S keep the same,
+		// case6: N is right child of P, S is black, SL is red, SR is black.
+		// execute: set SL to black, right rotate P, the exchange the color of P and S.
+		// result: S is now the parent of P, the black count through N increase 1,
+		//         the black count through S keep the same,
 		//         balance finish.
 		s.Left.Color = Black
 		pp.bindChild(RightRotate(p.Node))
