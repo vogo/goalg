@@ -46,6 +46,11 @@ func (n *Node) Black() bool {
 	return n == nil || n.Color == Black
 }
 
+// Red a node is red if nil or its color is red.
+func (n *Node) Red() bool {
+	return n == nil || n.Color == Red
+}
+
 // LeftBlack the left child of a node is black if nil or its color is black.
 func (n *Node) LeftBlack() bool {
 	return n.Left == nil || n.Left.Color == Black
@@ -64,6 +69,88 @@ func (n *Node) RightBlack() bool {
 // RightRed the right child of a node is black if not nil and its color is black.
 func (n *Node) RightRed() bool {
 	return n.Right != nil && n.Right.Color == Red
+}
+
+// nodePath the double linked list for the route path in a red-black tree.
+// while there is not a link to parent for a Node, the nodePath is used to save the route path
+// of the tree, it will be used in loop search/balance of the red-black tree.
+type nodePath struct {
+	*Node
+	pos            Position
+	previous, next *nodePath
+}
+
+// append a new node path.
+func (np *nodePath) append(n *Node, pos Position) *nodePath {
+	next := &nodePath{
+		Node:     n,
+		pos:      pos,
+		previous: np,
+		next:     nil,
+	}
+
+	np.next = next
+
+	return next
+}
+
+// bindChild set the child at the position of the path.
+func (np *nodePath) bindChild(n *Node) {
+	if np.pos == Left {
+		np.Left = n
+	} else {
+		np.Right = n
+	}
+}
+
+// siblingChild get the sibling of the child of the node.
+func (np *nodePath) siblingChild() *Node {
+	if np.pos == Left {
+		return np.Right
+	} else {
+		return np.Left
+	}
+}
+
+// rotateUpChild rotate the child up as the parent of current node.
+func (np *nodePath) rotateUpChild() *nodePath {
+	npp := &nodePath{
+		previous: np.previous,
+		next:     np,
+		pos:      np.previous.pos,
+	}
+
+	if np.pos == Left {
+		npp.Node = RightRotate(np.Node)
+	} else {
+		npp.Node = LeftRotate(np.Node)
+	}
+
+	np.previous.next = npp
+	np.previous = npp
+
+	return npp
+}
+
+// rotateUpSiblingChild rotate the sibling child up as the parent of current node.
+func (np *nodePath) rotateUpSiblingChild() *nodePath {
+	npp := &nodePath{
+		previous: np.previous,
+		next:     np,
+	}
+
+	if np.pos == Left {
+		npp.pos = Left
+		npp.Node = LeftRotate(np.Node)
+	} else {
+		npp.pos = Right
+		npp.Node = RightRotate(np.Node)
+	}
+
+	np.previous.next = npp
+	np.previous = npp
+
+	return npp
 }
 
 // LeftRotate left rotate a node.
@@ -93,12 +180,121 @@ func RightRotate(n *Node) *Node {
 }
 
 // Add add new key/value, return the new root node.
-func Add(root *Node, key int, value interface{}) *Node {
+func AddOne(root *Node, key int, value interface{}) *Node {
 	return addNew(root, &Node{
 		Key:   key,
 		Color: Red,
 		Value: value,
 	})
+}
+
+func Add(node *Node, key int, value interface{}) *Node {
+	if node == nil {
+		// case 1: new root
+		return &Node{
+			Key:   key,
+			Color: Black,
+			Value: value,
+		}
+	}
+
+	root := node
+
+	// add a EMPTY
+	stack := &nodePath{
+		Node: &Node{
+			Left: node,
+		},
+		pos: Left,
+	}
+	rootStack := stack
+
+	for node != nil {
+		if node.Key == key {
+			node.Value = value
+			return root
+		}
+
+		if key < node.Key {
+			stack = stack.append(node, Left)
+			node = node.Left
+		} else {
+			stack = stack.append(node, Right)
+			node = node.Right
+		}
+	}
+
+	p := stack
+	p.bindChild(&Node{
+		Key:   key,
+		Color: Red,
+		Value: value,
+	})
+
+	addBalance(stack)
+	rootStack.Left.Color = Black
+	return rootStack.Left
+}
+
+// situation: the child at the route path is red
+func addBalance(stack *nodePath) {
+	for stack != nil {
+		p := stack
+
+		// case 2: P is black, balance finish
+		if p.Color == Black {
+			return
+		}
+
+		// P is red
+
+		pp := p.previous
+		// case 1: reach the root
+		if pp == nil {
+			return
+		}
+
+		s := pp.siblingChild()
+
+		// case 3: P is red, S is red, PP is black
+		// execute: set P,S to black, PP to red
+		// result: black count through PP is not change, continue balance on parent of PP
+		if s != nil && s.Color == Red {
+			p.Color = Black
+			s.Color = Black
+			pp.Color = Red
+
+			stack = pp.previous
+
+			continue
+		}
+
+		// case 4: P is red, S is black, PP is black, the position of N and P are diff.
+		// execute: rotate up the red child
+		// result: let match the case 5.
+		if p.pos != pp.pos {
+			p = p.rotateUpChild()
+			pp.bindChild(p.Node)
+		}
+
+		// case 5: P is red, S is black, PP is black, the position of N and P are the same.
+		// execute: set P to black, PP to red, and rotate P up
+		// result: black count through P will not change, balance finish.
+		p.Color = Black
+		pp.Color = Red
+		var ppn *Node
+		if pp.pos == Left {
+			ppn = RightRotate(pp.Node)
+		} else {
+			ppn = LeftRotate(pp.Node)
+		}
+		if pp.previous != nil {
+			pp.previous.bindChild(ppn)
+		} else {
+			pp.Node = ppn
+		}
+		return
+	}
 }
 
 // addNew add new node, return the new root node.
@@ -116,6 +312,8 @@ func addNew(root *Node, new *Node) *Node {
 
 // addNode recursively down to leaf, and add the new node to the leaf,
 // then rebuild the tree from the leaf to root.
+// the main purpose is reduce two linked red nodes and keep the black count balance.
+//
 // code comment use the following terms:
 // - N as the balance node
 // - L as the left child of N
@@ -214,64 +412,6 @@ func Find(node *Node, key int) interface{} {
 		}
 	}
 	return nil
-}
-
-// nodePath the double linked list for the route path in a red-black tree.
-type nodePath struct {
-	*Node
-	pos            Position
-	previous, next *nodePath
-}
-
-// append a new node path.
-func (np *nodePath) append(n *Node, pos Position) *nodePath {
-	next := &nodePath{
-		Node:     n,
-		pos:      pos,
-		previous: np,
-		next:     nil,
-	}
-
-	np.next = next
-
-	return next
-}
-
-// bindChild set the child at the position of the path.
-func (np *nodePath) bindChild(n *Node) {
-	if np.pos == Left {
-		np.Left = n
-	} else {
-		np.Right = n
-	}
-}
-
-// siblingChild get the sibling of the child of the node.
-func (np *nodePath) siblingChild() *Node {
-	if np.pos == Left {
-		return np.Right
-	} else {
-		return np.Left
-	}
-}
-
-// rotateUpSiblingChild rotate the sibling child up as the parent of current node.
-func (np *nodePath) rotateUpSiblingChild() *nodePath {
-	pp := &nodePath{
-		previous: np.previous,
-		next:     np,
-	}
-	np.previous = pp
-
-	if np.pos == Left {
-		pp.pos = Left
-		pp.Node = LeftRotate(np.Node)
-	} else {
-		pp.pos = Right
-		pp.Node = RightRotate(np.Node)
-	}
-
-	return pp
 }
 
 // Delete delete a node.

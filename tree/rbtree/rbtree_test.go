@@ -18,7 +18,7 @@ import (
 )
 
 func TestRbTreeGraph(t *testing.T) {
-	root := RandNumRbTree(t, 16)
+	root := NumRbTree(t, []int{0, 4, 2, 3, 5, 1, 7, 9, 8})
 	t.Log("root:", root.Key)
 	generateTreeSvg(t, root)
 }
@@ -52,10 +52,8 @@ func TestRbTreeFindDelete(t *testing.T) {
 	assert.Equal(t, "4", ret)
 	root, ret = rbtree.Delete(root, 3)
 	assert.Equal(t, "3", ret)
-
 	root, ret = rbtree.Delete(root, 2)
 	assert.Equal(t, "2", ret)
-
 	root, ret = rbtree.Delete(root, 1)
 	assert.Equal(t, "1", ret)
 	root, ret = rbtree.Delete(root, 0)
@@ -89,9 +87,11 @@ func TestRbTreeFindDelete2(t *testing.T) {
 }
 
 func RandNumRbTree(t *testing.T, count int) *rbtree.Node {
-	var root *rbtree.Node
+	return NumRbTree(t, rand.Perm(count))
+}
 
-	arr := rand.Perm(count)
+func NumRbTree(t *testing.T, arr []int) *rbtree.Node {
+	var root *rbtree.Node
 
 	t.Log("rbtree rand build seq:", arr)
 
@@ -144,5 +144,29 @@ func fillTreeDot(buf *bytes.Buffer, node *rbtree.Node) {
 	if node.Right != nil {
 		buf.WriteString(fmt.Sprintf("%d -> %d[color=%s];\n", node.Key, node.Right.Key, node.Right.Color))
 		fillTreeDot(buf, node.Right)
+	}
+}
+
+var (
+	benchmarkTestArr = rand.Perm(64)
+)
+
+// BenchmarkAdd the performance of rbtree.Add is not better than rbtree.AddOne, because creating stack objects.
+// will try to use pool to optimize it.
+func BenchmarkAdd(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		var root *rbtree.Node
+		for _, n := range benchmarkTestArr {
+			root = rbtree.Add(root, n, strconv.Itoa(n))
+		}
+	}
+}
+
+func BenchmarkAddOne(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		var root *rbtree.Node
+		for _, n := range benchmarkTestArr {
+			root = rbtree.AddOne(root, n, strconv.Itoa(n))
+		}
 	}
 }
