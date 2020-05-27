@@ -1,3 +1,5 @@
+// Copyright 2020 wongoo@apache.org. All rights reserved.
+
 package rbtree_test
 
 import (
@@ -11,12 +13,48 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/wongoo/goalg/rbtree"
+	"github.com/stretchr/testify/assert"
+	"github.com/wongoo/goalg/tree/rbtree"
 )
 
+func TestReplace(t *testing.T) {
+	a := 1
+	b := 2
+
+	a, b = b, a
+
+	assert.Equal(t, 2, a)
+	assert.Equal(t, 1, b)
+}
+
 func TestNewNumRbTree(t *testing.T) {
-	root := RandNumRbTree(32)
+	root := RandNumRbTree(17)
 	generateTreeSvg(t, root)
+}
+
+func TestRbTreeFindDelete(t *testing.T) {
+	root := RandNumRbTree(8)
+
+	val := rbtree.Find(root, 7)
+	assert.Equal(t, "7", val)
+
+	root, ret := rbtree.Delete(root, 7)
+	assert.Equal(t, "7", ret)
+	root, ret = rbtree.Delete(root, 6)
+	assert.Equal(t, "6", ret)
+	root, ret = rbtree.Delete(root, 5)
+	assert.Equal(t, "5", ret)
+	root, ret = rbtree.Delete(root, 4)
+	assert.Equal(t, "4", ret)
+	root, ret = rbtree.Delete(root, 3)
+	assert.Equal(t, "3", ret)
+	root, ret = rbtree.Delete(root, 2)
+	assert.Equal(t, "2", ret)
+	root, ret = rbtree.Delete(root, 1)
+	assert.Equal(t, "1", ret)
+	root, ret = rbtree.Delete(root, 0)
+	assert.Equal(t, "0", ret)
+	assert.Nil(t, root)
 }
 
 func RandNumRbTree(count int) *rbtree.Node {
@@ -29,7 +67,7 @@ func RandNumRbTree(count int) *rbtree.Node {
 
 	for len(arr) > 0 {
 		i := rand.Intn(len(arr))
-		root = rbtree.AddKeyValue(root, arr[i], strconv.Itoa(arr[i]))
+		root = rbtree.Add(root, arr[i], strconv.Itoa(arr[i]))
 		arr = append(arr[:i], arr[i+1:]...)
 	}
 
@@ -42,7 +80,9 @@ func generateTreeSvg(t *testing.T, root *rbtree.Node) {
 node [shape=circle,style=solid]
 edge [arrowhead=none]
 `)
-	fillTreeDot(buf, root)
+	if root != nil {
+		fillTreeDot(buf, root)
+	}
 
 	buf.WriteString("}")
 
@@ -68,18 +108,13 @@ edge [arrowhead=none]
 }
 
 func fillTreeDot(buf *bytes.Buffer, node *rbtree.Node) {
+	buf.WriteString(fmt.Sprintf("%d[color=%s];\n", node.Key, node.Color))
 	if node.Left != nil {
 		buf.WriteString(fmt.Sprintf("%d -> %d[color=%s];\n", node.Key, node.Left.Key, node.Left.Color))
-		if node.Left.Color == rbtree.Red {
-			buf.WriteString(fmt.Sprintf("%d[color=%s];\n", node.Left.Key, node.Left.Color))
-		}
 		fillTreeDot(buf, node.Left)
 	}
 	if node.Right != nil {
 		buf.WriteString(fmt.Sprintf("%d -> %d[color=%s];\n", node.Key, node.Right.Key, node.Right.Color))
-		if node.Right.Color == rbtree.Red {
-			buf.WriteString(fmt.Sprintf("%d[color=%s];\n", node.Right.Key, node.Right.Color))
-		}
 		fillTreeDot(buf, node.Right)
 	}
 }
