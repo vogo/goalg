@@ -17,27 +17,45 @@ import (
 )
 
 func TestRbTreeGraph(t *testing.T) {
-	root := NumRbTree(t, []int{0, 4, 2, 3, 5, 1, 7, 9, 8})
+	root := NumRbTree(t, []int{0, 4, 2, 3, 5, 1, 7, 9, 8, 30, 10, 20, 200, 300, 400})
 	t.Log("root:", root.Key)
 	generateTreeSvg(t, root)
 }
 
-func TestRbTreeAdd(t *testing.T) {
+func TestRbTreeAddFindDelete(t *testing.T) {
 	tree := New()
+
+	tree.Add(4, "4")
+	tree.Add(5, "5")
+	tree.Add(6, "6")
 	tree.Add(1, "1")
 	tree.Add(2, "2")
 	tree.Add(3, "3")
 
 	tree.Add(7, "7")
 	assert.Equal(t, "7", tree.Find(7))
+
 	tree.Add(7, "77")
 	assert.Equal(t, "77", tree.Find(7))
 
 	tree.Add(8, "8")
 	assert.Equal(t, "8", tree.Find(8))
+
+	assert.Nil(t, tree.Delete(10))
+
+	assert.Equal(t, "1", tree.Delete(1))
+	assert.Equal(t, "2", tree.Delete(2))
+	assert.Equal(t, "3", tree.Delete(3))
+	assert.Equal(t, "4", tree.Delete(4))
+	assert.Equal(t, "5", tree.Delete(5))
+	assert.Equal(t, "6", tree.Delete(6))
+	assert.Equal(t, "77", tree.Delete(7))
+	assert.Equal(t, "8", tree.Delete(8))
+
+	assert.Nil(t, tree.Delete(8))
 }
 
-func TestRbTreeFindDelete(t *testing.T) {
+func TestFindDelete(t *testing.T) {
 	root := RandNumRbTree(t, 8)
 	val := Find(root, 7)
 	assert.Equal(t, "7", val)
@@ -95,7 +113,7 @@ func NumRbTree(t *testing.T, arr []int) *Node {
 	t.Log("rbtree rand build seq:", arr)
 
 	for _, n := range arr {
-		root = AddOne(root, n, strconv.Itoa(n))
+		root = AddNode(root, n, strconv.Itoa(n))
 	}
 
 	return root
@@ -150,7 +168,7 @@ var (
 	benchmarkTestArr = rand.Perm(128)
 )
 
-// BenchmarkAdd the performance of addTreeNode is better than AddOne
+// BenchmarkAdd the performance of addTreeNode is better than AddNode
 func BenchmarkAdd(b *testing.B) {
 	var root *Node
 	stack := newStack(root)
@@ -167,7 +185,7 @@ func BenchmarkAddOne(b *testing.B) {
 	value := "1"
 	for i := 0; i < b.N; i++ {
 		for _, n := range benchmarkTestArr {
-			root = AddOne(root, n, value)
+			root = AddNode(root, n, value)
 		}
 	}
 }

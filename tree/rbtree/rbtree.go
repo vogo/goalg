@@ -105,6 +105,8 @@ func RightRotate(n *Node) *Node {
 
 	return l
 }
+
+// Add add one key/value node in the tree, replace that if exist
 func (t *RBTree) Add(key int, value interface{}) {
 	t.lock.Lock()
 	defer t.lock.Unlock()
@@ -112,6 +114,7 @@ func (t *RBTree) Add(key int, value interface{}) {
 	t.Node = addTreeNode(t.stack, t.Node, key, value)
 }
 
+// Find node
 func (t *RBTree) Find(key int) interface{} {
 	t.lock.Lock()
 	defer t.lock.Unlock()
@@ -119,15 +122,19 @@ func (t *RBTree) Find(key int) interface{} {
 	return Find(t.Node, key)
 }
 
+// Delete delete node, return the value of deleted node
 func (t *RBTree) Delete(key int) (ret interface{}) {
 	t.lock.Lock()
 	defer t.lock.Unlock()
 
-	t.Node, ret = Delete(t.Node, key)
+	t.stack.init(t.Node)
+	t.Node, ret = deleteTreeNode(t.stack, t.Node, key)
+	t.stack.reset()
 
 	return ret
 }
 
+// addTreeNode add a tree node
 func addTreeNode(stack *stack, node *Node, key int, value interface{}) *Node {
 	stack.init(node)
 	defer stack.reset()
@@ -236,21 +243,21 @@ func addTreeNodeBalance(stack *stack) {
 	}
 }
 
-// Add add new key/value, return the new root node.
+// AddNode add new key/value, return the new root node.
 // this method add node and balance the tree recursively, not using loop logic.
-func AddOne(root *Node, key int, value interface{}) *Node {
-	return addNew(root, &Node{
+func AddNode(root *Node, key int, value interface{}) *Node {
+	return AddNewNode(root, &Node{
 		Key:   key,
 		Value: value,
 	})
 }
 
-// addNew add new node, return the new root node.
-func addNew(root *Node, new *Node) *Node {
+// AddNewNode add new node, return the new root node.
+func AddNewNode(root *Node, new *Node) *Node {
 	// set the new node to red
 	new.Color = Red
 
-	root = addNode(root, Left, new)
+	root = addOneNode(root, Left, new)
 
 	// reset root color
 	root.Color = Black
@@ -258,7 +265,7 @@ func addNew(root *Node, new *Node) *Node {
 	return root
 }
 
-// addNode recursively down to leaf, and add the new node to the leaf,
+// addOneNode recursively down to leaf, and add the new node to the leaf,
 // then rebuild the tree from the leaf to root.
 // the main purpose is reduce two linked red nodes and keep the black count balance.
 //
@@ -269,14 +276,14 @@ func addNew(root *Node, new *Node) *Node {
 // - P as the parent of N
 // - LL as the left child of left child of N
 // - RR as the right child of right child of N
-func addNode(node *Node, pos Position, new *Node) *Node {
+func addOneNode(node *Node, pos Position, new *Node) *Node {
 	// case 1: first node
 	if node == nil {
 		return new
 	}
 
 	if new.Key < node.Key {
-		node.Left = addNode(node.Left, Left, new)
+		node.Left = addOneNode(node.Left, Left, new)
 
 		// case 2: L is black means it's already balance.
 		if node.Left.Color == Black {
@@ -309,7 +316,7 @@ func addNode(node *Node, pos Position, new *Node) *Node {
 	}
 
 	if new.Key > node.Key {
-		node.Right = addNode(node.Right, Right, new)
+		node.Right = addOneNode(node.Right, Right, new)
 
 		// case 2: R is black means it's already balance
 		if node.Right.Color == Black {
@@ -371,19 +378,17 @@ func Delete(node *Node, key int) (*Node, interface{}) {
 		return nil, nil
 	}
 
+	return deleteTreeNode(newStack(node), node, key)
+}
+
+// deleteTreeNode delete a node.
+// return the new root node, and the value of the deleted node.
+// the new root node will be nil if no node exists in the tree after deleted.
+// the deleted node value will be nil if not found.
+func deleteTreeNode(stack *stack, node *Node, key int) (*Node, interface{}) {
 	root := node
 
-	var router *nodePath
 	var ret interface{}
-
-	// add a EMPTY
-	router = &nodePath{
-		Node: &Node{
-			Left: node,
-		},
-		pos: Left,
-	}
-	rootRouter := router
 
 	// find the node
 	for node != nil {
@@ -393,10 +398,10 @@ func Delete(node *Node, key int) (*Node, interface{}) {
 		}
 
 		if key < node.Key {
-			router = router.append(node, Left)
+			stack.push(node, Left)
 			node = node.Left
 		} else {
-			router = router.append(node, Right)
+			stack.push(node, Right)
 			node = node.Right
 		}
 
@@ -411,12 +416,12 @@ func Delete(node *Node, key int) (*Node, interface{}) {
 
 	// find the inorder successor
 	if node.Right != nil {
-		router = router.append(node, Right)
+		stack.push(node, Right)
 
 		inorderSuccessor = node.Right
 
 		for inorderSuccessor.Left != nil {
-			router = router.append(inorderSuccessor, Left)
+			stack.push(inorderSuccessor, Left)
 
 			inorderSuccessor = inorderSuccessor.Left
 		}
@@ -435,21 +440,19 @@ func Delete(node *Node, key int) (*Node, interface{}) {
 
 	// N has no child
 	if c == nil {
-		// get the node's previous from router
-		p := router
-
 		// delete N
-		p.bindChild(nil)
+		stack.bindChild(nil)
 
 		if node.Color == Red {
 			return root, ret
 		}
 
-		deleteBalance(router)
-		if rootRouter.Left != nil {
-			rootRouter.Left.Color = Black
+		deleteTreeNodeBalance(stack)
+		root := stack.root()
+		if root != nil {
+			root.Color = Black
 		}
-		return rootRouter.Left, ret
+		return root, ret
 	}
 
 	// N has one next
@@ -470,12 +473,13 @@ func Delete(node *Node, key int) (*Node, interface{}) {
 	}
 
 	// the color of N and next are both Black
-	deleteBalance(router)
-	rootRouter.Left.Color = Black
-	return rootRouter.Left, ret
+	deleteTreeNodeBalance(stack)
+
+	root.Color = Black
+	return root, ret
 }
 
-// deleteBalance balance the tree after deleting.
+// deleteTreeNodeBalance balance the tree after deleting.
 // code comment use the following terms:
 // - N as the balance node
 // - P as the father of N
@@ -483,18 +487,18 @@ func Delete(node *Node, key int) (*Node, interface{}) {
 // - S as the sibling of N
 // - SL as the left child of S
 // - SR as the right child of S
-func deleteBalance(router *nodePath) {
+func deleteTreeNodeBalance(stack *stack) {
 	var (
-		p, pp *nodePath
-		s     *Node
+		p, pp, s  *Node
+		pos, ppos Position
 	)
 
 	// case 1: reach the root.
 	// execute: nothing.
 	// result: balance finish.
-	for router.previous != nil {
-		p, pp = router, router.previous
-		s = p.siblingChild()
+	for stack.index > 0 {
+		p, pp, s = stack.node(), stack.parent(), stack.childSibling()
+		pos, ppos = stack.position(), stack.parentPosition()
 
 		// case 2: S is red.
 		// execute: rotate S up as the PP of N, and exchange the color of P and S.
@@ -502,13 +506,28 @@ func deleteBalance(router *nodePath) {
 		if s.Color == Red {
 			p.Color, s.Color = s.Color, p.Color
 
-			pp.bindChild(p.rotateUpSiblingChild().Node)
+			// np is original S
+			var np *Node
+
+			if pos == Left {
+				np = LeftRotate(p)
+				s = p.Right
+			} else {
+				np = RightRotate(p)
+				s = p.Left
+			}
+
+			// insert np in stack
+			stack.insertBeforeCurrent(np, pos)
+
+			if ppos == Left {
+				pp.Left = np
+			} else {
+				pp.Right = np
+			}
 
 			// reset PP (original S)
-			pp = p.previous
-
-			// reset S (a black node, original SL/SR)
-			s = p.siblingChild()
+			pp = np
 		}
 
 		// now S is black.
@@ -520,7 +539,7 @@ func deleteBalance(router *nodePath) {
 			//         set N to p, and continue execute balance.
 			if p.Black() {
 				s.Color = Red
-				router = router.previous
+				stack.pop()
 				continue
 			}
 
@@ -533,7 +552,7 @@ func deleteBalance(router *nodePath) {
 
 		//  now SL and SR has diff color
 
-		if p.pos == Left {
+		if pos == Left {
 			// case 5: N is left child of P, S is black, SL is red, SR is black.
 			// execute: right rotate on S, then exchange color of SL(parent of S now) and S.
 			// result: N has a new black sibling S(original SL), and S has a red right child SR(original S),
@@ -550,8 +569,15 @@ func deleteBalance(router *nodePath) {
 			//         the black count through S keep the same,
 			//         balance finish.
 			s.Right.Color = Black
-			pp.bindChild(LeftRotate(p.Node))
 			p.Color, s.Color = s.Color, p.Color
+			p = LeftRotate(p)
+
+			if ppos == Left {
+				pp.Left = p
+			} else {
+				pp.Right = p
+			}
+
 			return
 		}
 
@@ -571,7 +597,14 @@ func deleteBalance(router *nodePath) {
 		//         the black count through S keep the same,
 		//         balance finish.
 		s.Left.Color = Black
-		pp.bindChild(RightRotate(p.Node))
+		p = RightRotate(p)
+
+		if ppos == Left {
+			pp.Left = p
+		} else {
+			pp.Right = p
+		}
+
 		p.Color, s.Color = s.Color, p.Color
 		return
 	}
