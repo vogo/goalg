@@ -1,3 +1,5 @@
+// Copyright 2020 wongoo@apache.org. All rights reserved.
+
 package numbucket_test
 
 import (

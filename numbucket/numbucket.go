@@ -1,3 +1,5 @@
+// Copyright 2020 wongoo@apache.org. All rights reserved.
+
 // 容器盛水问题
 //
 // 给定一个整形数组arr，已知其中所有的值都是非负的，将这个数组看作一个容器，请返回容器能装多少水。
