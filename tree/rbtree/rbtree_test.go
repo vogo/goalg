@@ -17,7 +17,7 @@ import (
 )
 
 func TestRbTreeGraph(t *testing.T) {
-	root := NumRbTree(t, []int{0, 4, 2, 3, 5, 1, 7, 9, 8, 30, 10, 20, 200, 300, 400})
+	root := NumRbTree(t, []int{0, 4, 2, 3, 6, 5, 1, 7, 9, 8, 11, 30, 10, 40, 20, 200, 500, 300, 400})
 	t.Log("root:", root.Key)
 	generateTreeSvg(t, root)
 }

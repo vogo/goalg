@@ -67,14 +67,14 @@ func (n *Node) RightRed() bool {
 // RBTree red-black tree
 type RBTree struct {
 	Node  *Node
-	lock  sync.Mutex
+	lock  sync.RWMutex
 	stack *stack
 }
 
 // New create a new red-black tree
 func New() *RBTree {
 	return &RBTree{
-		lock:  sync.Mutex{},
+		lock:  sync.RWMutex{},
 		Node:  nil,
 		stack: newStack(nil),
 	}
@@ -116,8 +116,8 @@ func (t *RBTree) Add(key int, value interface{}) {
 
 // Find node
 func (t *RBTree) Find(key int) interface{} {
-	t.lock.Lock()
-	defer t.lock.Unlock()
+	t.lock.RLock()
+	defer t.lock.RUnlock()
 
 	return Find(t.Node, key)
 }
