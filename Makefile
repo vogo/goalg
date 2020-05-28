@@ -1,8 +1,10 @@
 lint:
 	golangci-lint run
 
-format:
+import:
 		goimports -w -l .
+
+format:
 		go fmt ./...
 
 test:
