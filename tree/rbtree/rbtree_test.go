@@ -1,6 +1,6 @@
 // Copyright 2020 wongoo@apache.org. All rights reserved.
 
-package rbtree_test
+package rbtree
 
 import (
 	"bytes"
@@ -14,7 +14,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/wongoo/goalg/tree/rbtree"
 )
 
 func TestRbTreeGraph(t *testing.T) {
@@ -24,39 +23,39 @@ func TestRbTreeGraph(t *testing.T) {
 }
 
 func TestRbTreeAdd(t *testing.T) {
-	root := RandNumRbTree(t, 7)
+	tree := New()
+	tree.Add(1, "1")
+	tree.Add(2, "2")
+	tree.Add(3, "3")
 
-	root = rbtree.Add(root, 7, "7")
-	assert.Equal(t, "7", rbtree.Find(root, 7))
+	tree.Add(7, "7")
+	assert.Equal(t, "7", tree.Find(7))
+	tree.Add(7, "77")
+	assert.Equal(t, "77", tree.Find(7))
 
-	root = rbtree.Add(root, 7, "77")
-	assert.Equal(t, "77", rbtree.Find(root, 7))
-
-	root = rbtree.Add(root, 8, "8")
-	assert.Equal(t, "8", rbtree.Find(root, 8))
-	root = rbtree.Add(root, 8, "88")
-	assert.Equal(t, "88", rbtree.Find(root, 8))
+	tree.Add(8, "8")
+	assert.Equal(t, "8", tree.Find(8))
 }
 
 func TestRbTreeFindDelete(t *testing.T) {
 	root := RandNumRbTree(t, 8)
-	val := rbtree.Find(root, 7)
+	val := Find(root, 7)
 	assert.Equal(t, "7", val)
-	root, ret := rbtree.Delete(root, 7)
+	root, ret := Delete(root, 7)
 	assert.Equal(t, "7", ret)
-	root, ret = rbtree.Delete(root, 6)
+	root, ret = Delete(root, 6)
 	assert.Equal(t, "6", ret)
-	root, ret = rbtree.Delete(root, 5)
+	root, ret = Delete(root, 5)
 	assert.Equal(t, "5", ret)
-	root, ret = rbtree.Delete(root, 4)
+	root, ret = Delete(root, 4)
 	assert.Equal(t, "4", ret)
-	root, ret = rbtree.Delete(root, 3)
+	root, ret = Delete(root, 3)
 	assert.Equal(t, "3", ret)
-	root, ret = rbtree.Delete(root, 2)
+	root, ret = Delete(root, 2)
 	assert.Equal(t, "2", ret)
-	root, ret = rbtree.Delete(root, 1)
+	root, ret = Delete(root, 1)
 	assert.Equal(t, "1", ret)
-	root, ret = rbtree.Delete(root, 0)
+	root, ret = Delete(root, 0)
 	assert.Equal(t, "0", ret)
 	assert.Nil(t, root)
 }
@@ -64,45 +63,45 @@ func TestRbTreeFindDelete(t *testing.T) {
 func TestRbTreeFindDelete2(t *testing.T) {
 	root := RandNumRbTree(t, 8)
 
-	val := rbtree.Find(root, 7)
+	val := Find(root, 7)
 	assert.Equal(t, "7", val)
 
-	root, ret := rbtree.Delete(root, 7)
+	root, ret := Delete(root, 7)
 	assert.Equal(t, "7", ret)
-	root, ret = rbtree.Delete(root, 0)
+	root, ret = Delete(root, 0)
 	assert.Equal(t, "0", ret)
-	root, ret = rbtree.Delete(root, 6)
+	root, ret = Delete(root, 6)
 	assert.Equal(t, "6", ret)
-	root, ret = rbtree.Delete(root, 1)
+	root, ret = Delete(root, 1)
 	assert.Equal(t, "1", ret)
-	root, ret = rbtree.Delete(root, 5)
+	root, ret = Delete(root, 5)
 	assert.Equal(t, "5", ret)
-	root, ret = rbtree.Delete(root, 2)
+	root, ret = Delete(root, 2)
 	assert.Equal(t, "2", ret)
-	root, ret = rbtree.Delete(root, 4)
+	root, ret = Delete(root, 4)
 	assert.Equal(t, "4", ret)
-	root, ret = rbtree.Delete(root, 3)
+	root, ret = Delete(root, 3)
 	assert.Equal(t, "3", ret)
 	assert.Nil(t, root)
 }
 
-func RandNumRbTree(t *testing.T, count int) *rbtree.Node {
+func RandNumRbTree(t *testing.T, count int) *Node {
 	return NumRbTree(t, rand.Perm(count))
 }
 
-func NumRbTree(t *testing.T, arr []int) *rbtree.Node {
-	var root *rbtree.Node
+func NumRbTree(t *testing.T, arr []int) *Node {
+	var root *Node
 
 	t.Log("rbtree rand build seq:", arr)
 
 	for _, n := range arr {
-		root = rbtree.Add(root, n, strconv.Itoa(n))
+		root = AddOne(root, n, strconv.Itoa(n))
 	}
 
 	return root
 }
 
-func generateTreeSvg(t *testing.T, root *rbtree.Node) {
+func generateTreeSvg(t *testing.T, root *Node) {
 	buf := bytes.NewBuffer(nil)
 	buf.WriteString(`digraph G {
 node [shape=circle,style=solid]
@@ -135,7 +134,7 @@ edge [arrowhead=none]
 	_ = exec.Command("open", svgpath).Run()
 }
 
-func fillTreeDot(buf *bytes.Buffer, node *rbtree.Node) {
+func fillTreeDot(buf *bytes.Buffer, node *Node) {
 	buf.WriteString(fmt.Sprintf("%d[color=%s];\n", node.Key, node.Color))
 	if node.Left != nil {
 		buf.WriteString(fmt.Sprintf("%d -> %d[color=%s];\n", node.Key, node.Left.Key, node.Left.Color))
@@ -148,25 +147,27 @@ func fillTreeDot(buf *bytes.Buffer, node *rbtree.Node) {
 }
 
 var (
-	benchmarkTestArr = rand.Perm(64)
+	benchmarkTestArr = rand.Perm(128)
 )
 
-// BenchmarkAdd the performance of rbtree.Add is not better than rbtree.AddOne, because creating stack objects.
-// will try to use pool to optimize it.
+// BenchmarkAdd the performance of addTreeNode is better than AddOne
 func BenchmarkAdd(b *testing.B) {
+	var root *Node
+	stack := newStack(root)
+	value := "1"
 	for i := 0; i < b.N; i++ {
-		var root *rbtree.Node
 		for _, n := range benchmarkTestArr {
-			root = rbtree.Add(root, n, strconv.Itoa(n))
+			root = addTreeNode(stack, root, n, value)
 		}
 	}
 }
 
 func BenchmarkAddOne(b *testing.B) {
+	var root *Node
+	value := "1"
 	for i := 0; i < b.N; i++ {
-		var root *rbtree.Node
 		for _, n := range benchmarkTestArr {
-			root = rbtree.AddOne(root, n, strconv.Itoa(n))
+			root = AddOne(root, n, value)
 		}
 	}
 }

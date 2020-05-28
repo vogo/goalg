@@ -4,27 +4,20 @@
 // the node only contains pointers to left/right child, not for the parent, for saving storage space for large tree.
 package rbtree
 
+import "sync"
+
 // Color node color
 type Color bool
 
-// String node color desc.
 func (c Color) String() string {
 	if c {
 		return "red"
 	}
-	return "Black"
+	return "black"
 }
 
 // Position tree path position, left or right.
 type Position bool
-
-// String position desc.
-func (p Position) String() string {
-	if p {
-		return "left"
-	}
-	return "right"
-}
 
 const (
 	Red   = Color(true)
@@ -71,86 +64,20 @@ func (n *Node) RightRed() bool {
 	return n.Right != nil && n.Right.Color == Red
 }
 
-// nodePath the double linked list for the route path in a red-black tree.
-// while there is not a link to parent for a Node, the nodePath is used to save the route path
-// of the tree, it will be used in loop search/balance of the red-black tree.
-type nodePath struct {
-	*Node
-	pos            Position
-	previous, next *nodePath
+// RBTree red-black tree
+type RBTree struct {
+	Node  *Node
+	lock  sync.Mutex
+	stack *stack
 }
 
-// append a new node path.
-func (np *nodePath) append(n *Node, pos Position) *nodePath {
-	next := &nodePath{
-		Node:     n,
-		pos:      pos,
-		previous: np,
-		next:     nil,
+// New create a new red-black tree
+func New() *RBTree {
+	return &RBTree{
+		lock:  sync.Mutex{},
+		Node:  nil,
+		stack: newStack(nil),
 	}
-
-	np.next = next
-
-	return next
-}
-
-// bindChild set the child at the position of the path.
-func (np *nodePath) bindChild(n *Node) {
-	if np.pos == Left {
-		np.Left = n
-	} else {
-		np.Right = n
-	}
-}
-
-// siblingChild get the sibling of the child of the node.
-func (np *nodePath) siblingChild() *Node {
-	if np.pos == Left {
-		return np.Right
-	} else {
-		return np.Left
-	}
-}
-
-// rotateUpChild rotate the child up as the parent of current node.
-func (np *nodePath) rotateUpChild() *nodePath {
-	npp := &nodePath{
-		previous: np.previous,
-		next:     np,
-		pos:      np.previous.pos,
-	}
-
-	if np.pos == Left {
-		npp.Node = RightRotate(np.Node)
-	} else {
-		npp.Node = LeftRotate(np.Node)
-	}
-
-	np.previous.next = npp
-	np.previous = npp
-
-	return npp
-}
-
-// rotateUpSiblingChild rotate the sibling child up as the parent of current node.
-func (np *nodePath) rotateUpSiblingChild() *nodePath {
-	npp := &nodePath{
-		previous: np.previous,
-		next:     np,
-	}
-
-	if np.pos == Left {
-		npp.pos = Left
-		npp.Node = LeftRotate(np.Node)
-	} else {
-		npp.pos = Right
-		npp.Node = RightRotate(np.Node)
-	}
-
-	np.previous.next = npp
-	np.previous = npp
-
-	return npp
 }
 
 // LeftRotate left rotate a node.
@@ -178,17 +105,33 @@ func RightRotate(n *Node) *Node {
 
 	return l
 }
+func (t *RBTree) Add(key int, value interface{}) {
+	t.lock.Lock()
+	defer t.lock.Unlock()
 
-// Add add new key/value, return the new root node.
-func AddOne(root *Node, key int, value interface{}) *Node {
-	return addNew(root, &Node{
-		Key:   key,
-		Color: Red,
-		Value: value,
-	})
+	t.Node = addTreeNode(t.stack, t.Node, key, value)
 }
 
-func Add(node *Node, key int, value interface{}) *Node {
+func (t *RBTree) Find(key int) interface{} {
+	t.lock.Lock()
+	defer t.lock.Unlock()
+
+	return Find(t.Node, key)
+}
+
+func (t *RBTree) Delete(key int) (ret interface{}) {
+	t.lock.Lock()
+	defer t.lock.Unlock()
+
+	t.Node, ret = Delete(t.Node, key)
+
+	return ret
+}
+
+func addTreeNode(stack *stack, node *Node, key int, value interface{}) *Node {
+	stack.init(node)
+	defer stack.reset()
+
 	if node == nil {
 		// case 1: new root
 		return &Node{
@@ -198,48 +141,40 @@ func Add(node *Node, key int, value interface{}) *Node {
 		}
 	}
 
-	root := node
-
-	// add a EMPTY
-	stack := &nodePath{
-		Node: &Node{
-			Left: node,
-		},
-		pos: Left,
-	}
-	rootStack := stack
-
 	for node != nil {
 		if node.Key == key {
 			node.Value = value
-			return root
+			return stack.root()
 		}
 
 		if key < node.Key {
-			stack = stack.append(node, Left)
+			stack.push(node, Left)
 			node = node.Left
 		} else {
-			stack = stack.append(node, Right)
+			stack.push(node, Right)
 			node = node.Right
 		}
 	}
 
-	p := stack
-	p.bindChild(&Node{
+	stack.bindChild(&Node{
 		Key:   key,
 		Color: Red,
 		Value: value,
 	})
 
-	addBalance(stack)
-	rootStack.Left.Color = Black
-	return rootStack.Left
+	addTreeNodeBalance(stack)
+
+	root := stack.root()
+	root.Color = Black
+
+	return root
 }
 
-// situation: the child at the route path is red
-func addBalance(stack *nodePath) {
-	for stack != nil {
-		p := stack
+// addTreeNodeBalance balance the tree after adding a node
+// the pre condition is the child of current stack is red
+func addTreeNodeBalance(stack *stack) {
+	for stack.index > 0 {
+		p := stack.node()
 
 		// case 2: P is black, balance finish
 		if p.Color == Black {
@@ -248,13 +183,13 @@ func addBalance(stack *nodePath) {
 
 		// P is red
 
-		pp := p.previous
+		pp := stack.parent()
 		// case 1: reach the root
 		if pp == nil {
 			return
 		}
 
-		s := pp.siblingChild()
+		s := stack.sibling()
 
 		// case 3: P is red, S is red, PP is black
 		// execute: set P,S to black, PP to red
@@ -264,7 +199,7 @@ func addBalance(stack *nodePath) {
 			s.Color = Black
 			pp.Color = Red
 
-			stack = pp.previous
+			stack.pop().pop()
 
 			continue
 		}
@@ -272,9 +207,15 @@ func addBalance(stack *nodePath) {
 		// case 4: P is red, S is black, PP is black, the position of N and P are diff.
 		// execute: rotate up the red child
 		// result: let match the case 5.
-		if p.pos != pp.pos {
-			p = p.rotateUpChild()
-			pp.bindChild(p.Node)
+		pos, ppos := stack.position(), stack.parentPosition()
+		if pos != ppos {
+			if pos == Left {
+				p = RightRotate(p)
+				pp.Right = p
+			} else {
+				p = LeftRotate(p)
+				pp.Left = p
+			}
 		}
 
 		// case 5: P is red, S is black, PP is black, the position of N and P are the same.
@@ -283,18 +224,25 @@ func addBalance(stack *nodePath) {
 		p.Color = Black
 		pp.Color = Red
 		var ppn *Node
-		if pp.pos == Left {
-			ppn = RightRotate(pp.Node)
+		if ppos == Left {
+			ppn = RightRotate(pp)
 		} else {
-			ppn = LeftRotate(pp.Node)
+			ppn = LeftRotate(pp)
 		}
-		if pp.previous != nil {
-			pp.previous.bindChild(ppn)
-		} else {
-			pp.Node = ppn
-		}
+
+		stack.pop().pop().bindChild(ppn)
+
 		return
 	}
+}
+
+// Add add new key/value, return the new root node.
+// this method add node and balance the tree recursively, not using loop logic.
+func AddOne(root *Node, key int, value interface{}) *Node {
+	return addNew(root, &Node{
+		Key:   key,
+		Value: value,
+	})
 }
 
 // addNew add new node, return the new root node.
@@ -425,17 +373,17 @@ func Delete(node *Node, key int) (*Node, interface{}) {
 
 	root := node
 
-	var stack *nodePath
+	var router *nodePath
 	var ret interface{}
 
 	// add a EMPTY
-	stack = &nodePath{
+	router = &nodePath{
 		Node: &Node{
 			Left: node,
 		},
 		pos: Left,
 	}
-	rootStack := stack
+	rootRouter := router
 
 	// find the node
 	for node != nil {
@@ -445,10 +393,10 @@ func Delete(node *Node, key int) (*Node, interface{}) {
 		}
 
 		if key < node.Key {
-			stack = stack.append(node, Left)
+			router = router.append(node, Left)
 			node = node.Left
 		} else {
-			stack = stack.append(node, Right)
+			router = router.append(node, Right)
 			node = node.Right
 		}
 
@@ -463,12 +411,12 @@ func Delete(node *Node, key int) (*Node, interface{}) {
 
 	// find the inorder successor
 	if node.Right != nil {
-		stack = stack.append(node, Right)
+		router = router.append(node, Right)
 
 		inorderSuccessor = node.Right
 
 		for inorderSuccessor.Left != nil {
-			stack = stack.append(inorderSuccessor, Left)
+			router = router.append(inorderSuccessor, Left)
 
 			inorderSuccessor = inorderSuccessor.Left
 		}
@@ -487,8 +435,8 @@ func Delete(node *Node, key int) (*Node, interface{}) {
 
 	// N has no child
 	if c == nil {
-		// get the node's previous from stack
-		p := stack
+		// get the node's previous from router
+		p := router
 
 		// delete N
 		p.bindChild(nil)
@@ -497,11 +445,11 @@ func Delete(node *Node, key int) (*Node, interface{}) {
 			return root, ret
 		}
 
-		deleteBalance(stack)
-		if rootStack.Left != nil {
-			rootStack.Left.Color = Black
+		deleteBalance(router)
+		if rootRouter.Left != nil {
+			rootRouter.Left.Color = Black
 		}
-		return rootStack.Left, ret
+		return rootRouter.Left, ret
 	}
 
 	// N has one next
@@ -522,9 +470,9 @@ func Delete(node *Node, key int) (*Node, interface{}) {
 	}
 
 	// the color of N and next are both Black
-	deleteBalance(stack)
-	rootStack.Left.Color = Black
-	return rootStack.Left, ret
+	deleteBalance(router)
+	rootRouter.Left.Color = Black
+	return rootRouter.Left, ret
 }
 
 // deleteBalance balance the tree after deleting.
@@ -535,7 +483,7 @@ func Delete(node *Node, key int) (*Node, interface{}) {
 // - S as the sibling of N
 // - SL as the left child of S
 // - SR as the right child of S
-func deleteBalance(stack *nodePath) {
+func deleteBalance(router *nodePath) {
 	var (
 		p, pp *nodePath
 		s     *Node
@@ -544,8 +492,8 @@ func deleteBalance(stack *nodePath) {
 	// case 1: reach the root.
 	// execute: nothing.
 	// result: balance finish.
-	for stack.previous != nil {
-		p, pp = stack, stack.previous
+	for router.previous != nil {
+		p, pp = router, router.previous
 		s = p.siblingChild()
 
 		// case 2: S is red.
@@ -572,7 +520,7 @@ func deleteBalance(stack *nodePath) {
 			//         set N to p, and continue execute balance.
 			if p.Black() {
 				s.Color = Red
-				stack = stack.previous
+				router = router.previous
 				continue
 			}
 
