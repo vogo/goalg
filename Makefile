@@ -10,4 +10,6 @@ format:
 test:
 		go test ./... -v
 
-all: format lint test
+ci: format test
+
+all: import format lint test
