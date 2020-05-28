@@ -146,7 +146,7 @@ edge [arrowhead=none]
 	result, err := exec.Command("/bin/sh", "-c", command).CombinedOutput()
 	if err != nil {
 		t.Logf("%s, %v", result, err)
-		t.FailNow()
+		return
 	}
 
 	_ = exec.Command("open", svgpath).Run()
