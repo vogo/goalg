@@ -41,7 +41,7 @@ func (s *stack) push(n *Node, pos Position) {
 	s.nodes[s.index], s.positions[s.index] = n, pos
 }
 
-func (s *stack) insertBeforeCurrent(n *Node, pos Position) {
+func (s *stack) insertBefore(n *Node, pos Position) {
 	s.nodes[s.index+1], s.positions[s.index+1] = s.nodes[s.index], s.positions[s.index]
 	s.nodes[s.index], s.positions[s.index] = n, pos
 	s.index++

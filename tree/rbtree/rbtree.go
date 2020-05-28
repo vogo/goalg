@@ -518,7 +518,7 @@ func deleteTreeNodeBalance(stack *stack) {
 			}
 
 			// insert np in stack
-			stack.insertBeforeCurrent(np, pos)
+			stack.insertBefore(np, pos)
 
 			if ppos == Left {
 				pp.Left = np
