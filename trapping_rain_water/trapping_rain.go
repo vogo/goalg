@@ -31,7 +31,7 @@
 // 输出
 // 2
 
-package numbucket
+package trapping_rain_water
 
 // CapacityByShortBoard calc capacity of number bucket by finding the short board in only one loop
 //

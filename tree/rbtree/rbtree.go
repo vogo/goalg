@@ -253,11 +253,11 @@ func AddNode(root *Node, key int, value interface{}) *Node {
 }
 
 // AddNewNode add new node, return the new root node.
-func AddNewNode(root *Node, new *Node) *Node {
+func AddNewNode(root *Node, node *Node) *Node {
 	// set the new node to red
-	new.Color = Red
+	node.Color = Red
 
-	root = addOneNode(root, Left, new)
+	root = addOneNode(root, Left, node)
 
 	// reset root color
 	root.Color = Black
@@ -373,7 +373,7 @@ func Find(node *Node, key int) interface{} {
 // return the new root node, and the value of the deleted node.
 // the new root node will be nil if no node exists in the tree after deleted.
 // the deleted node value will be nil if not found.
-func Delete(node *Node, key int) (*Node, interface{}) {
+func Delete(node *Node, key int) (n *Node, ret interface{}) {
 	if node == nil {
 		return nil, nil
 	}
