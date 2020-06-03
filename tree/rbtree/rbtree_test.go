@@ -136,7 +136,7 @@ edge [arrowhead=none]
 
 	dotpath := filepath.Join(dir, "goalg_rbtree.dot")
 	svgpath := filepath.Join(dir, "goalg_rbtree.svg")
-	err := ioutil.WriteFile(dotpath, buf.Bytes(), 0666)
+	err := ioutil.WriteFile(dotpath, buf.Bytes(), 0660)
 	if err != nil {
 		t.Log(err)
 		t.FailNow()

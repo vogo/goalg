@@ -25,13 +25,17 @@ linters-settings:
       - experimental
     disabled-checks:
       - wrapperFunc
-      - funlen
 
 linters:
-  enable-all: true
+  enable-all: false
+  enable:
   disable:
     - prealloc
     - gochecknoglobals
+    - funlen
+    - deadcode
+    - unused
+    - testpackage
 
 run:
   skip-dirs:

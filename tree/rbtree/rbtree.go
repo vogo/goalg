@@ -276,14 +276,14 @@ func AddNewNode(root *Node, node *Node) *Node {
 // - P as the parent of N
 // - LL as the left child of left child of N
 // - RR as the right child of right child of N
-func addOneNode(node *Node, pos Position, new *Node) *Node {
+func addOneNode(node *Node, pos Position, one *Node) *Node {
 	// case 1: first node
 	if node == nil {
-		return new
+		return one
 	}
 
-	if new.Key < node.Key {
-		node.Left = addOneNode(node.Left, Left, new)
+	if one.Key < node.Key {
+		node.Left = addOneNode(node.Left, Left, one)
 
 		// case 2: L is black means it's already balance.
 		if node.Left.Color == Black {
@@ -315,8 +315,8 @@ func addOneNode(node *Node, pos Position, new *Node) *Node {
 		return node
 	}
 
-	if new.Key > node.Key {
-		node.Right = addOneNode(node.Right, Right, new)
+	if one.Key > node.Key {
+		node.Right = addOneNode(node.Right, Right, one)
 
 		// case 2: R is black means it's already balance
 		if node.Right.Color == Black {
@@ -349,7 +349,7 @@ func addOneNode(node *Node, pos Position, new *Node) *Node {
 	}
 
 	// case 6: find the exists node, just replace the old value with the new
-	node.Value = new.Value
+	node.Value = one.Value
 
 	return node
 }
@@ -448,7 +448,7 @@ func deleteTreeNode(stack *stack, node *Node, key int) (*Node, interface{}) {
 		}
 
 		deleteTreeNodeBalance(stack)
-		root := stack.root()
+		root = stack.root()
 		if root != nil {
 			root.Color = Black
 		}
