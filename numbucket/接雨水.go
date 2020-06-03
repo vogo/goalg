@@ -1,4 +1,8 @@
-// 这边按照理解难易程度给上三种解法
+/* 
+ 这边按照理解难易程度给上三种解法，最后一种暴力破解最容易理解，可以先看。然后基于暴力破解版进行优化，才有了上面的两种解法。
+ 其中，难度三星的双指针版本思路与望哥的numbucket.go解法思路类似
+ 力扣原题链接：https://leetcode-cn.com/problems/trapping-rain-water/submissions/
+*/
 
 // 难度三星：双指针版，空间与时间的最优解
 func trap(height []int) int {
