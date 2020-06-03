@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/vogo/goalg/trapping_rain_water"
+	"github.com/vogo/goalg/leetcode/trapping_rain_water"
 )
 
 func randIntArr(size, max int) []int {
