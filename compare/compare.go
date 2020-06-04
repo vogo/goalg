@@ -7,7 +7,7 @@ type Lesser interface {
 	Less(o Lesser) bool
 }
 
-// CompareItem compare one with another
+// Comparer compare one with another
 type Comparer interface {
 	// Compare compare with another value
 	// suggest:
