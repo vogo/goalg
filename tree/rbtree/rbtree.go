@@ -4,7 +4,11 @@
 // the node only contains pointers to left/right child, not for the parent, for saving storage space for large tree.
 package rbtree
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/vogo/goalg/compare"
+)
 
 // Color node color
 type Color bool
@@ -28,10 +32,9 @@ const (
 
 // Node the node of red-Black tree.
 type Node struct {
-	Key         int
-	Color       Color
+	Item        compare.Lesser
 	Left, Right *Node
-	Value       interface{}
+	Color       Color
 }
 
 // Black a node is black if nil or its color is black.
@@ -107,15 +110,15 @@ func RightRotate(n *Node) *Node {
 }
 
 // Add add one key/value node in the tree, replace that if exist
-func (t *RBTree) Add(key int, value interface{}) {
+func (t *RBTree) Add(item compare.Lesser) {
 	t.lock.Lock()
 	defer t.lock.Unlock()
 
-	t.Node = addTreeNode(t.stack, t.Node, key, value)
+	t.Node = addTreeNode(t.stack, t.Node, item)
 }
 
 // Find node
-func (t *RBTree) Find(key int) interface{} {
+func (t *RBTree) Find(key compare.Lesser) interface{} {
 	t.lock.RLock()
 	defer t.lock.RUnlock()
 
@@ -123,7 +126,7 @@ func (t *RBTree) Find(key int) interface{} {
 }
 
 // Delete delete node, return the value of deleted node
-func (t *RBTree) Delete(key int) (ret interface{}) {
+func (t *RBTree) Delete(key compare.Lesser) (ret interface{}) {
 	t.lock.Lock()
 	defer t.lock.Unlock()
 
@@ -135,38 +138,35 @@ func (t *RBTree) Delete(key int) (ret interface{}) {
 }
 
 // addTreeNode add a tree node
-func addTreeNode(stack *stack, node *Node, key int, value interface{}) *Node {
+func addTreeNode(stack *stack, node *Node, item compare.Lesser) *Node {
 	stack.init(node)
 	defer stack.reset()
 
 	if node == nil {
 		// case 1: new root
 		return &Node{
-			Key:   key,
+			Item:  item,
 			Color: Black,
-			Value: value,
 		}
 	}
 
 	for node != nil {
-		if node.Key == key {
-			node.Value = value
-			return stack.root()
-		}
-
-		if key < node.Key {
+		switch {
+		case item.Less(node.Item):
 			stack.push(node, Left)
 			node = node.Left
-		} else {
+		case node.Item.Less(item):
 			stack.push(node, Right)
 			node = node.Right
+		default:
+			node.Item = item
+			return stack.root()
 		}
 	}
 
 	stack.bindChild(&Node{
-		Key:   key,
+		Item:  item,
 		Color: Red,
-		Value: value,
 	})
 
 	addTreeNodeBalance(stack)
@@ -245,10 +245,9 @@ func addTreeNodeBalance(stack *stack) {
 
 // AddNode add new key/value, return the new root node.
 // this method add node and balance the tree recursively, not using loop logic.
-func AddNode(root *Node, key int, value interface{}) *Node {
+func AddNode(root *Node, item compare.Lesser) *Node {
 	return AddNewNode(root, &Node{
-		Key:   key,
-		Value: value,
+		Item: item,
 	})
 }
 
@@ -282,7 +281,7 @@ func addOneNode(node *Node, pos Position, one *Node) *Node {
 		return one
 	}
 
-	if one.Key < node.Key {
+	if one.Item.Less(node.Item) {
 		node.Left = addOneNode(node.Left, Left, one)
 
 		// case 2: L is black means it's already balance.
@@ -315,7 +314,7 @@ func addOneNode(node *Node, pos Position, one *Node) *Node {
 		return node
 	}
 
-	if one.Key > node.Key {
+	if node.Item.Less(one.Item) {
 		node.Right = addOneNode(node.Right, Right, one)
 
 		// case 2: R is black means it's already balance
@@ -349,21 +348,21 @@ func addOneNode(node *Node, pos Position, one *Node) *Node {
 	}
 
 	// case 6: find the exists node, just replace the old value with the new
-	node.Value = one.Value
+	node.Item = one.Item
 
 	return node
 }
 
 // Find find the value of a key.
-func Find(node *Node, key int) interface{} {
+func Find(node *Node, item compare.Lesser) compare.Lesser {
 	for node != nil {
-		if node.Key == key {
-			return node.Value
-		}
-		if key < node.Key {
+		switch {
+		case item.Less(node.Item):
 			node = node.Left
-		} else {
+		case node.Item.Less(item):
 			node = node.Right
+		default:
+			return node.Item
 		}
 	}
 	return nil
@@ -373,38 +372,37 @@ func Find(node *Node, key int) interface{} {
 // return the new root node, and the value of the deleted node.
 // the new root node will be nil if no node exists in the tree after deleted.
 // the deleted node value will be nil if not found.
-func Delete(node *Node, key int) (n *Node, ret interface{}) {
+func Delete(node *Node, item compare.Lesser) (n *Node, ret interface{}) {
 	if node == nil {
 		return nil, nil
 	}
 
-	return deleteTreeNode(newStack(node), node, key)
+	return deleteTreeNode(newStack(node), node, item)
 }
 
 // deleteTreeNode delete a node.
 // return the new root node, and the value of the deleted node.
 // the new root node will be nil if no node exists in the tree after deleted.
 // the deleted node value will be nil if not found.
-func deleteTreeNode(stack *stack, node *Node, key int) (*Node, interface{}) {
+func deleteTreeNode(stack *stack, node *Node, item compare.Lesser) (*Node, interface{}) {
 	root := node
 
 	var ret interface{}
 
 	// find the node
+FOR:
 	for node != nil {
-		if node.Key == key {
-			ret = node.Value
-			break
-		}
-
-		if key < node.Key {
+		switch {
+		case item.Less(node.Item):
 			stack.push(node, Left)
 			node = node.Left
-		} else {
+		case node.Item.Less(item):
 			stack.push(node, Right)
 			node = node.Right
+		default:
+			ret = node.Item
+			break FOR
 		}
-
 	}
 
 	// not find
@@ -426,8 +424,8 @@ func deleteTreeNode(stack *stack, node *Node, key int) (*Node, interface{}) {
 			inorderSuccessor = inorderSuccessor.Left
 		}
 
-		node.Key = inorderSuccessor.Key
-		node.Value = inorderSuccessor.Value
+		node.Item = inorderSuccessor.Item
+		node.Item = inorderSuccessor.Item
 
 		node = inorderSuccessor
 	}
@@ -457,8 +455,7 @@ func deleteTreeNode(stack *stack, node *Node, key int) (*Node, interface{}) {
 
 	// N has one next
 	// then copy key/value from next to N
-	node.Key = c.Key
-	node.Value = c.Value
+	node.Item = c.Item
 
 	// delete the next
 	node.Left = nil

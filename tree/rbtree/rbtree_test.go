@@ -10,97 +10,29 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/vogo/goalg/compare"
 )
 
-func TestRbTreeGraph(t *testing.T) {
-	root := NumRbTree(t, []int{0, 4, 2, 3, 6, 5, 1, 7, 9, 8, 11, 30, 10, 40, 20, 200, 500, 300, 400})
-	t.Log("root:", root.Key)
-	generateTreeSvg(t, root)
+type Int int
+
+func (item Int) Less(o compare.Lesser) bool {
+	return item < o.(Int)
 }
 
-func TestRbTreeAddFindDelete(t *testing.T) {
-	tree := New()
+func (item Int) Compare(o compare.Comparer) int {
+	than := o.(Int)
+	if item < than {
+		return -1
+	}
 
-	tree.Add(4, "4")
-	tree.Add(5, "5")
-	tree.Add(6, "6")
-	tree.Add(1, "1")
-	tree.Add(2, "2")
-	tree.Add(3, "3")
+	if item > than {
+		return 1
+	}
 
-	tree.Add(7, "7")
-	assert.Equal(t, "7", tree.Find(7))
-
-	tree.Add(7, "77")
-	assert.Equal(t, "77", tree.Find(7))
-
-	tree.Add(8, "8")
-	assert.Equal(t, "8", tree.Find(8))
-
-	assert.Nil(t, tree.Delete(10))
-
-	assert.Equal(t, "1", tree.Delete(1))
-	assert.Equal(t, "2", tree.Delete(2))
-	assert.Equal(t, "3", tree.Delete(3))
-	assert.Equal(t, "4", tree.Delete(4))
-	assert.Equal(t, "5", tree.Delete(5))
-	assert.Equal(t, "6", tree.Delete(6))
-	assert.Equal(t, "77", tree.Delete(7))
-	assert.Equal(t, "8", tree.Delete(8))
-
-	assert.Nil(t, tree.Delete(8))
-}
-
-func TestFindDelete(t *testing.T) {
-	root := RandNumRbTree(t, 8)
-	val := Find(root, 7)
-	assert.Equal(t, "7", val)
-	root, ret := Delete(root, 7)
-	assert.Equal(t, "7", ret)
-	root, ret = Delete(root, 6)
-	assert.Equal(t, "6", ret)
-	root, ret = Delete(root, 5)
-	assert.Equal(t, "5", ret)
-	root, ret = Delete(root, 4)
-	assert.Equal(t, "4", ret)
-	root, ret = Delete(root, 3)
-	assert.Equal(t, "3", ret)
-	root, ret = Delete(root, 2)
-	assert.Equal(t, "2", ret)
-	root, ret = Delete(root, 1)
-	assert.Equal(t, "1", ret)
-	root, ret = Delete(root, 0)
-	assert.Equal(t, "0", ret)
-	assert.Nil(t, root)
-}
-
-func TestRbTreeFindDelete2(t *testing.T) {
-	root := RandNumRbTree(t, 8)
-
-	val := Find(root, 7)
-	assert.Equal(t, "7", val)
-
-	root, ret := Delete(root, 7)
-	assert.Equal(t, "7", ret)
-	root, ret = Delete(root, 0)
-	assert.Equal(t, "0", ret)
-	root, ret = Delete(root, 6)
-	assert.Equal(t, "6", ret)
-	root, ret = Delete(root, 1)
-	assert.Equal(t, "1", ret)
-	root, ret = Delete(root, 5)
-	assert.Equal(t, "5", ret)
-	root, ret = Delete(root, 2)
-	assert.Equal(t, "2", ret)
-	root, ret = Delete(root, 4)
-	assert.Equal(t, "4", ret)
-	root, ret = Delete(root, 3)
-	assert.Equal(t, "3", ret)
-	assert.Nil(t, root)
+	return 0
 }
 
 func RandNumRbTree(t *testing.T, count int) *Node {
@@ -113,10 +45,94 @@ func NumRbTree(t *testing.T, arr []int) *Node {
 	t.Log("rbtree rand build seq:", arr)
 
 	for _, n := range arr {
-		root = AddNode(root, n, strconv.Itoa(n))
+		root = AddNode(root, Int(n))
 	}
 
 	return root
+}
+
+func TestRbTreeGraph(t *testing.T) {
+	root := NumRbTree(t, []int{0, 4, 2, 3, 6, 5, 1, 7, 9, 8, 11, 30, 10, 40, 20, 200, 500, 300, 400})
+	t.Log("root:", root.Item)
+	generateTreeSvg(t, root)
+}
+
+func TestRbTreeAddFindDelete(t *testing.T) {
+	tree := New()
+
+	tree.Add(Int(4))
+	tree.Add(Int(5))
+	tree.Add(Int(6))
+	tree.Add(Int(1))
+	tree.Add(Int(2))
+	tree.Add(Int(3))
+
+	tree.Add(Int(7))
+	assert.Equal(t, Int(7), tree.Find(Int(7)))
+
+	tree.Add(Int(8))
+	assert.Equal(t, Int(8), tree.Find(Int(8)))
+
+	assert.Nil(t, tree.Delete(Int(10)))
+
+	assert.Equal(t, Int(1), tree.Delete(Int(1)))
+	assert.Equal(t, Int(2), tree.Delete(Int(2)))
+	assert.Equal(t, Int(3), tree.Delete(Int(3)))
+	assert.Equal(t, Int(4), tree.Delete(Int(4)))
+	assert.Equal(t, Int(5), tree.Delete(Int(5)))
+	assert.Equal(t, Int(6), tree.Delete(Int(6)))
+	assert.Equal(t, Int(7), tree.Delete(Int(7)))
+	assert.Equal(t, Int(8), tree.Delete(Int(8)))
+
+	assert.Nil(t, tree.Delete(Int(8)))
+}
+
+func TestFindDelete(t *testing.T) {
+	root := RandNumRbTree(t, 8)
+	val := Find(root, Int(7))
+	assert.Equal(t, Int(7), val)
+	root, ret := Delete(root, Int(7))
+	assert.Equal(t, Int(7), ret)
+	root, ret = Delete(root, Int(6))
+	assert.Equal(t, Int(6), ret)
+	root, ret = Delete(root, Int(5))
+	assert.Equal(t, Int(5), ret)
+	root, ret = Delete(root, Int(4))
+	assert.Equal(t, Int(4), ret)
+	root, ret = Delete(root, Int(3))
+	assert.Equal(t, Int(3), ret)
+	root, ret = Delete(root, Int(2))
+	assert.Equal(t, Int(2), ret)
+	root, ret = Delete(root, Int(1))
+	assert.Equal(t, Int(1), ret)
+	root, ret = Delete(root, Int(0))
+	assert.Equal(t, Int(0), ret)
+	assert.Nil(t, root)
+}
+
+func TestRbTreeFindDelete2(t *testing.T) {
+	root := RandNumRbTree(t, 8)
+
+	val := Find(root, Int(7))
+	assert.Equal(t, Int(7), val)
+
+	root, ret := Delete(root, Int(7))
+	assert.Equal(t, Int(7), ret)
+	root, ret = Delete(root, Int(0))
+	assert.Equal(t, Int(0), ret)
+	root, ret = Delete(root, Int(6))
+	assert.Equal(t, Int(6), ret)
+	root, ret = Delete(root, Int(1))
+	assert.Equal(t, Int(1), ret)
+	root, ret = Delete(root, Int(5))
+	assert.Equal(t, Int(5), ret)
+	root, ret = Delete(root, Int(2))
+	assert.Equal(t, Int(2), ret)
+	root, ret = Delete(root, Int(4))
+	assert.Equal(t, Int(4), ret)
+	root, ret = Delete(root, Int(3))
+	assert.Equal(t, Int(3), ret)
+	assert.Nil(t, root)
 }
 
 func generateTreeSvg(t *testing.T, root *Node) {
@@ -153,13 +169,13 @@ edge [arrowhead=none]
 }
 
 func fillTreeDot(buf *bytes.Buffer, node *Node) {
-	buf.WriteString(fmt.Sprintf("%d[color=%s];\n", node.Key, node.Color))
+	buf.WriteString(fmt.Sprintf("%d[color=%s];\n", node.Item, node.Color))
 	if node.Left != nil {
-		buf.WriteString(fmt.Sprintf("%d -> %d[color=%s];\n", node.Key, node.Left.Key, node.Left.Color))
+		buf.WriteString(fmt.Sprintf("%d -> %d[color=%s];\n", node.Item, node.Left.Item, node.Left.Color))
 		fillTreeDot(buf, node.Left)
 	}
 	if node.Right != nil {
-		buf.WriteString(fmt.Sprintf("%d -> %d[color=%s];\n", node.Key, node.Right.Key, node.Right.Color))
+		buf.WriteString(fmt.Sprintf("%d -> %d[color=%s];\n", node.Item, node.Right.Item, node.Right.Color))
 		fillTreeDot(buf, node.Right)
 	}
 }
@@ -172,20 +188,18 @@ var (
 func BenchmarkAdd(b *testing.B) {
 	var root *Node
 	stack := newStack(root)
-	value := "1"
 	for i := 0; i < b.N; i++ {
 		for _, n := range benchmarkTestArr {
-			root = addTreeNode(stack, root, n, value)
+			root = addTreeNode(stack, root, Int(n))
 		}
 	}
 }
 
 func BenchmarkAddOne(b *testing.B) {
 	var root *Node
-	value := "1"
 	for i := 0; i < b.N; i++ {
 		for _, n := range benchmarkTestArr {
-			root = AddNode(root, n, value)
+			root = AddNode(root, Int(n))
 		}
 	}
 }
