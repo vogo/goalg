@@ -606,3 +606,11 @@ func deleteTreeNodeBalance(stack *stack) {
 		return
 	}
 }
+
+// Int a implement of Lesser
+type Int int
+
+// Less implement less
+func (item Int) Less(o compare.Lesser) bool {
+	return item < o.(Int)
+}

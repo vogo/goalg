@@ -13,27 +13,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/vogo/goalg/compare"
 )
-
-type Int int
-
-func (item Int) Less(o compare.Lesser) bool {
-	return item < o.(Int)
-}
-
-func (item Int) Compare(o compare.Comparer) int {
-	than := o.(Int)
-	if item < than {
-		return -1
-	}
-
-	if item > than {
-		return 1
-	}
-
-	return 0
-}
 
 func RandNumRbTree(t *testing.T, count int) *Node {
 	return NumRbTree(t, rand.Perm(count))
