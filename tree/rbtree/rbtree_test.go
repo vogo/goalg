@@ -34,7 +34,7 @@ func NumRbTree(t *testing.T, arr []int) *Node {
 func TestRbTreeGraph(t *testing.T) {
 	root := NumRbTree(t, []int{0, 4, 2, 3, 6, 5, 1, 7, 9, 8, 11, 30, 10, 40, 20, 200, 500, 300, 400})
 	t.Log("root:", root.Item)
-	generateTreeSvg(t, root)
+	// GenerateTreeSvg(t, root)
 }
 
 func TestRbTreeAddFindDelete(t *testing.T) {
@@ -115,7 +115,7 @@ func TestRbTreeFindDelete2(t *testing.T) {
 	assert.Nil(t, root)
 }
 
-func generateTreeSvg(t *testing.T, root *Node) {
+func GenerateTreeSvg(t *testing.T, root *Node) {
 	buf := bytes.NewBuffer(nil)
 	buf.WriteString(`digraph G {
 node [shape=circle,style=solid]
