@@ -82,7 +82,7 @@ func RightBound(arr []compare.Lesser, target compare.Lesser) int {
 		if target.Less(arr[mid]) {
 			r = mid - 1
 		} else {
-			// target >= arr[mid]
+			// arr[mid] <= target
 			// keep binary search in the right half even when equals to close to the right bound.
 			l = mid
 		}
