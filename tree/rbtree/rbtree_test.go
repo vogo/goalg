@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/vogo/goalg/compare"
 )
 
 func RandNumRbTree(t *testing.T, count int) *Node {
@@ -25,7 +26,7 @@ func NumRbTree(t *testing.T, arr []int) *Node {
 	t.Log("rbtree rand build seq:", arr)
 
 	for _, n := range arr {
-		root = AddNode(root, Int(n))
+		root = AddNode(root, compare.Int(n))
 	}
 
 	return root
@@ -40,78 +41,78 @@ func TestRbTreeGraph(t *testing.T) {
 func TestRbTreeAddFindDelete(t *testing.T) {
 	tree := New()
 
-	tree.Add(Int(4))
-	tree.Add(Int(5))
-	tree.Add(Int(6))
-	tree.Add(Int(1))
-	tree.Add(Int(2))
-	tree.Add(Int(3))
+	tree.Add(compare.Int(4))
+	tree.Add(compare.Int(5))
+	tree.Add(compare.Int(6))
+	tree.Add(compare.Int(1))
+	tree.Add(compare.Int(2))
+	tree.Add(compare.Int(3))
 
-	tree.Add(Int(7))
-	assert.Equal(t, Int(7), tree.Find(Int(7)))
+	tree.Add(compare.Int(7))
+	assert.Equal(t, compare.Int(7), tree.Find(compare.Int(7)))
 
-	tree.Add(Int(8))
-	assert.Equal(t, Int(8), tree.Find(Int(8)))
+	tree.Add(compare.Int(8))
+	assert.Equal(t, compare.Int(8), tree.Find(compare.Int(8)))
 
-	assert.Nil(t, tree.Delete(Int(10)))
+	assert.Nil(t, tree.Delete(compare.Int(10)))
 
-	assert.Equal(t, Int(1), tree.Delete(Int(1)))
-	assert.Equal(t, Int(2), tree.Delete(Int(2)))
-	assert.Equal(t, Int(3), tree.Delete(Int(3)))
-	assert.Equal(t, Int(4), tree.Delete(Int(4)))
-	assert.Equal(t, Int(5), tree.Delete(Int(5)))
-	assert.Equal(t, Int(6), tree.Delete(Int(6)))
-	assert.Equal(t, Int(7), tree.Delete(Int(7)))
-	assert.Equal(t, Int(8), tree.Delete(Int(8)))
+	assert.Equal(t, compare.Int(1), tree.Delete(compare.Int(1)))
+	assert.Equal(t, compare.Int(2), tree.Delete(compare.Int(2)))
+	assert.Equal(t, compare.Int(3), tree.Delete(compare.Int(3)))
+	assert.Equal(t, compare.Int(4), tree.Delete(compare.Int(4)))
+	assert.Equal(t, compare.Int(5), tree.Delete(compare.Int(5)))
+	assert.Equal(t, compare.Int(6), tree.Delete(compare.Int(6)))
+	assert.Equal(t, compare.Int(7), tree.Delete(compare.Int(7)))
+	assert.Equal(t, compare.Int(8), tree.Delete(compare.Int(8)))
 
-	assert.Nil(t, tree.Delete(Int(8)))
+	assert.Nil(t, tree.Delete(compare.Int(8)))
 }
 
 func TestFindDelete(t *testing.T) {
 	root := RandNumRbTree(t, 8)
-	val := Find(root, Int(7))
-	assert.Equal(t, Int(7), val)
-	root, ret := Delete(root, Int(7))
-	assert.Equal(t, Int(7), ret)
-	root, ret = Delete(root, Int(6))
-	assert.Equal(t, Int(6), ret)
-	root, ret = Delete(root, Int(5))
-	assert.Equal(t, Int(5), ret)
-	root, ret = Delete(root, Int(4))
-	assert.Equal(t, Int(4), ret)
-	root, ret = Delete(root, Int(3))
-	assert.Equal(t, Int(3), ret)
-	root, ret = Delete(root, Int(2))
-	assert.Equal(t, Int(2), ret)
-	root, ret = Delete(root, Int(1))
-	assert.Equal(t, Int(1), ret)
-	root, ret = Delete(root, Int(0))
-	assert.Equal(t, Int(0), ret)
+	val := Find(root, compare.Int(7))
+	assert.Equal(t, compare.Int(7), val)
+	root, ret := Delete(root, compare.Int(7))
+	assert.Equal(t, compare.Int(7), ret)
+	root, ret = Delete(root, compare.Int(6))
+	assert.Equal(t, compare.Int(6), ret)
+	root, ret = Delete(root, compare.Int(5))
+	assert.Equal(t, compare.Int(5), ret)
+	root, ret = Delete(root, compare.Int(4))
+	assert.Equal(t, compare.Int(4), ret)
+	root, ret = Delete(root, compare.Int(3))
+	assert.Equal(t, compare.Int(3), ret)
+	root, ret = Delete(root, compare.Int(2))
+	assert.Equal(t, compare.Int(2), ret)
+	root, ret = Delete(root, compare.Int(1))
+	assert.Equal(t, compare.Int(1), ret)
+	root, ret = Delete(root, compare.Int(0))
+	assert.Equal(t, compare.Int(0), ret)
 	assert.Nil(t, root)
 }
 
 func TestRbTreeFindDelete2(t *testing.T) {
 	root := RandNumRbTree(t, 8)
 
-	val := Find(root, Int(7))
-	assert.Equal(t, Int(7), val)
+	val := Find(root, compare.Int(7))
+	assert.Equal(t, compare.Int(7), val)
 
-	root, ret := Delete(root, Int(7))
-	assert.Equal(t, Int(7), ret)
-	root, ret = Delete(root, Int(0))
-	assert.Equal(t, Int(0), ret)
-	root, ret = Delete(root, Int(6))
-	assert.Equal(t, Int(6), ret)
-	root, ret = Delete(root, Int(1))
-	assert.Equal(t, Int(1), ret)
-	root, ret = Delete(root, Int(5))
-	assert.Equal(t, Int(5), ret)
-	root, ret = Delete(root, Int(2))
-	assert.Equal(t, Int(2), ret)
-	root, ret = Delete(root, Int(4))
-	assert.Equal(t, Int(4), ret)
-	root, ret = Delete(root, Int(3))
-	assert.Equal(t, Int(3), ret)
+	root, ret := Delete(root, compare.Int(7))
+	assert.Equal(t, compare.Int(7), ret)
+	root, ret = Delete(root, compare.Int(0))
+	assert.Equal(t, compare.Int(0), ret)
+	root, ret = Delete(root, compare.Int(6))
+	assert.Equal(t, compare.Int(6), ret)
+	root, ret = Delete(root, compare.Int(1))
+	assert.Equal(t, compare.Int(1), ret)
+	root, ret = Delete(root, compare.Int(5))
+	assert.Equal(t, compare.Int(5), ret)
+	root, ret = Delete(root, compare.Int(2))
+	assert.Equal(t, compare.Int(2), ret)
+	root, ret = Delete(root, compare.Int(4))
+	assert.Equal(t, compare.Int(4), ret)
+	root, ret = Delete(root, compare.Int(3))
+	assert.Equal(t, compare.Int(3), ret)
 	assert.Nil(t, root)
 }
 
@@ -170,7 +171,7 @@ func BenchmarkAdd(b *testing.B) {
 	stack := newStack(root)
 	for i := 0; i < b.N; i++ {
 		for _, n := range benchmarkTestArr {
-			root = addTreeNode(stack, root, Int(n))
+			root = addTreeNode(stack, root, compare.Int(n))
 		}
 	}
 }
@@ -179,7 +180,7 @@ func BenchmarkAddOne(b *testing.B) {
 	var root *Node
 	for i := 0; i < b.N; i++ {
 		for _, n := range benchmarkTestArr {
-			root = AddNode(root, Int(n))
+			root = AddNode(root, compare.Int(n))
 		}
 	}
 }

@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/google/btree"
+	"github.com/vogo/goalg/compare"
 	"github.com/vogo/goalg/tree/rbtree"
 )
 
@@ -47,7 +48,7 @@ func main() {
 	if *gorbtree {
 		tr := rbtree.New()
 		for _, v := range vals {
-			tr.Add(rbtree.Int(v))
+			tr.Add(compare.Int(v))
 		}
 		t = tr // keep it around
 	} else {
