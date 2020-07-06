@@ -6,7 +6,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/vogo/goalg)](https://goreportcard.com/report/github.com/vogo/goalg)
 ![license](https://img.shields.io/badge/license-Apache--2.0-green.svg)
 
-## # 二分查找
+## 二分查找
    
 **核心思想**: 
 - 给定排序的数组，选定中间位置，和目标值比较；

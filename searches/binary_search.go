@@ -1,11 +1,11 @@
 // author: wongoo@apache.org
 
-package binary_search
+package searches
 
 import "github.com/vogo/goalg/compare"
 
-// Search binary search the target, return the index when first found.
-func Search(arr []compare.Comparer, target compare.Comparer) int {
+// BinarySearch binary search the target, return the index when first found.
+func BinarySearch(arr []compare.Comparer, target compare.Comparer) int {
 	l, r, mid := 0, len(arr)-1, 0
 
 	// the left and right index may be equal
@@ -30,8 +30,8 @@ func Search(arr []compare.Comparer, target compare.Comparer) int {
 	return -1
 }
 
-// LeftBound binary search the target, return the left bound index when found duplicates.
-func LeftBound(arr []compare.Lesser, target compare.Lesser) int {
+// BinarySearchLeftBound binary search the target, return the left bound index when found duplicates.
+func BinarySearchLeftBound(arr []compare.Lesser, target compare.Lesser) int {
 	if len(arr) == 0 {
 		return -1
 	}
@@ -63,8 +63,8 @@ func LeftBound(arr []compare.Lesser, target compare.Lesser) int {
 	return -1
 }
 
-// RightBound binary search the target, return the right bound index when found duplicates.
-func RightBound(arr []compare.Lesser, target compare.Lesser) int {
+// BinarySearchRightBound binary search the target, return the right bound index when found duplicates.
+func BinarySearchRightBound(arr []compare.Lesser, target compare.Lesser) int {
 	if len(arr) == 0 {
 		return -1
 	}
