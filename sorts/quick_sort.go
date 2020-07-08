@@ -1,6 +1,14 @@
 package sorts
 
-import "sort"
+import (
+	"sort"
+)
+
+// QuickSortInts
+func QuickSortInts(a []int) []int {
+	QuickSort(sort.IntSlice(a))
+	return a
+}
 
 // QuickSort
 func QuickSort(a sort.Interface) {
@@ -13,16 +21,13 @@ func QuickRangeSort(a sort.Interface, l, r int) {
 		return
 	}
 
-	i, j := l+1, r
+	i, j, x := l-1, r+1, int(uint(l+r)>>1)
 
 	for {
-
-		for i < r && a.Less(i, l) {
-			i++
+		for i++; a.Less(i, x); i++ {
 		}
 
-		for j > l && a.Less(l, j) {
-			j--
+		for j--; a.Less(x, j); j-- {
 		}
 
 		if i >= j {
@@ -30,12 +35,14 @@ func QuickRangeSort(a sort.Interface, l, r int) {
 		}
 
 		a.Swap(i, j)
-		i++
-		j--
+
+		if i == x {
+			x = j
+		} else if j == x {
+			x = i
+		}
 	}
 
-	a.Swap(l, j)
-
-	QuickRangeSort(a, l, j-1)
+	QuickRangeSort(a, l, j)
 	QuickRangeSort(a, j+1, r)
 }
