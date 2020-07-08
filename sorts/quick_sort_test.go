@@ -24,24 +24,3 @@ func TestQuickSort(t *testing.T) {
 		assert.Equal(t, a1, a2)
 	}
 }
-
-var (
-	benchmarkIntSize  = 10000
-	benchmarkIntSlice = rand.Perm(benchmarkIntSize)
-)
-
-func BenchmarkQuickSort(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		a := make([]int, benchmarkIntSize)
-		copy(a, benchmarkIntSlice)
-		QuickSort(sort.IntSlice(benchmarkIntSlice))
-	}
-}
-
-func BenchmarkSort(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		a := make([]int, benchmarkIntSize)
-		copy(a, benchmarkIntSlice)
-		sort.Ints(a)
-	}
-}

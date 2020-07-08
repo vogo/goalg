@@ -1,5 +1,7 @@
 package compare
 
+import "sort"
+
 // Lesser compare one is less than another
 type Lesser interface {
 	// Less return true if current less than another,
@@ -57,4 +59,41 @@ func NewLessers(a []int) []Lesser {
 		arr[i] = Int(a[i])
 	}
 	return arr
+}
+
+type Array interface {
+	sort.Interface
+	Clone() Array
+	Set(i int, v interface{})
+	Get(i int) interface{}
+	Sub(i, j int) interface{}
+	CopyFrom(start int, src interface{})
+}
+
+type IntArray []int
+
+func (p IntArray) Len() int           { return len(p) }
+func (p IntArray) Less(i, j int) bool { return p[i] < p[j] }
+func (p IntArray) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+
+func (p IntArray) Clone() Array {
+	b := make([]int, len(p))
+	copy(b[:], p[:])
+	return IntArray(b)
+}
+
+func (p IntArray) Set(i int, v interface{}) {
+	p[i] = v.(int)
+}
+
+func (p IntArray) Get(i int) interface{} {
+	return p[i]
+}
+
+func (p IntArray) Sub(i, j int) interface{} {
+	return p[i:j]
+}
+
+func (p IntArray) CopyFrom(start int, src interface{}) {
+	copy(p[start:], src.(IntArray))
 }
